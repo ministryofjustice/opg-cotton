@@ -4,9 +4,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='cotton',
-    version='0.5.0',
-    url='http://github.com/ministryofjustice/cotton',
-    license='TBD',
+    version='0.6.0',
+    url='http://github.com/ministryofjustice/opg-cotton',
+    license='MIT',
     author='',
     author_email='',
     description='',
