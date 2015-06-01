@@ -19,7 +19,7 @@ from pprint import pformat
 
 from fabric.api import env, put, sudo, task, get, abort
 
-from cotton.colors import red, yellow, green
+from cotton.colors import red, yellow, green, blue, white
 from cotton.api import vm_task, get_provider_zone_config
 
 
@@ -251,87 +251,125 @@ def bootstrap_master(salt_roles=None, master='localhost', flags='-M', **kwargs):
     _bootstrap_salt(master=master, flags=flags, salt_roles=salt_roles, **kwargs)
 
 
-@task
-def salt(selector, args, parse_highstate=False, timeout=60):
+@vm_task
+def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False):
     """
     `salt` / `salt-call` wrapper that:
     - checks if `env.saltmaster` is set to select between `salt` or `salt-call` command
     - checks for output state.highstate and aborts on failure
     param selector: i.e.: '*', -G 'roles:foo'
     param args: i.e. state.highstate
+    param parse_highstate: If True then salt output is yaml and parsed for Successes/Changes/Failures
+    param timeout: Passed to salt as a timeout value (-t) in seconds
+    param skip_manage_down: If True then skip the check to run a manage.down to establish unresponsive minions
     """
 
-    def dump_json(data):
-        return json.dumps(data, indent=4)
+    parsed_summary = []
 
-    def stream_jsons(data):
-        """
-        ugly semi (assumes that input is a pprinted jsons' sequence) salt specific json stream parser as generator of jsons
-        #TODO: work on stream instead of big data blob
-        """
-        data_buffer = []
-        for line in data.splitlines():
-            assert isinstance(line, basestring)
-            data_buffer.append(line)
-            if line.startswith("}"):  # as salt output is a pretty json this means - end of json blob
-                if data_buffer:
-                    yield json.loads("".join(data_buffer), object_pairs_hook=OrderedDict)
-                    data_buffer = []
-        assert not data_buffer
+    def manage_down():
+      if not skip_manage_down:
+        unresponsive = False
+        remote_temp_salt_manage = sudo('mktemp')
+
+        sudo("salt-run manage.down -t {} > {}".format(timeout, remote_temp_salt_manage))
+        sudo("chmod 664 {}".format(remote_temp_salt_manage))
+
+        output_fd_salt_manage = StringIO()
+        get(remote_temp_salt_manage, output_fd_salt_manage)
+        output_salt_manage = output_fd_salt_manage.getvalue()
+
+        parsed_summary.append(white("\nUnresponsive minions:", bold=True))
+        if not output_salt_manage:
+          output_salt_manage = "None"
+          color = yellow
+        else:
+          color = red
+          unresponsive = True
+        parsed_summary.append(color("\n\t{}".format(output_salt_manage.replace("\n","\n\t")), bold=True))
+
+        assert (not unresponsive),"Unresponsive salt minions: %s" % ''.join(parsed_summary)
+
+        # Tidy up if minions all ok
+        sudo('rm {}'.format(remote_temp_salt_manage))
 
     if parse_highstate:
-        remote_temp = sudo('mktemp')
+        remote_temp_salt = sudo('mktemp')
         # Fabric merges stdout & stderr for sudo. So output is useless
-        # Therefore we will store the stdout in json format to separate file and parse it later
+        # Store the stdout in yaml format to a temp file and parse after
+
+        # Salt does not return unresponsive minion information unless -v is used and since this
+        # adds jid and header information it causes the yaml parser to thrown an exception.
+        # Therefore run a manage.down separately to check for problematic minions
+
         if 'saltmaster' in env and env.saltmaster:
-            sudo("salt {} {} --out=json -t {}| tee {}".format(selector, args, timeout, remote_temp))
+          manage_down()
+          sudo("salt {} {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
+          manage_down()
         else:
-            sudo("salt-call {} --out=json | tee {}".format(args, remote_temp))
+            sudo("salt-call {} --out=yaml > {}".format(args, remote_temp_salt))
 
-        sudo("chmod 664 {}".format(remote_temp))
-        output_fd = StringIO()
-        get(remote_temp, output_fd)
-        output = output_fd.getvalue()
+        sudo("chmod 664 {}".format(remote_temp_salt))
+
+        output_fd_salt = StringIO()
+        get(remote_temp_salt, output_fd_salt)
+        output_salt = output_fd_salt.getvalue()
+
         failed = 0
-        summary = defaultdict(lambda: defaultdict(lambda: 0))
+        changed = 0
+        worked = 0
+        salt_yml = yaml.safe_load(output_salt)
 
-        for out_parsed in stream_jsons(output):
-            for server, states in out_parsed.iteritems():
-                if isinstance(states, list):
-                    failed += 1
-                else:
-                    for state, state_fields in states.iteritems():
-                        summary[server]['states'] += 1
-                        color = green
-                        if state_fields['changes']:
-                            color = yellow
-                            summary[server]['changed'] += 1
-                        if not state_fields['result']:
-                            color = red
-                            summary[server]['failed'] += 1
-                            failed += 1
-                            print(color("{}: ".format(state), bold=True))
-                            print(color(dump_json(state_fields)))
-                        else:
-                            summary[server]['passed'] += 1
-                            print(color("{}: ".format(state), bold=True))
-                            print(color(dump_json(state_fields)))
+        for salted_host in salt_yml:
+          host_fail = 0
+          host_work = 0
+          host_change = 0
+          parsed_summary.append(blue("\n{}:".format(salted_host), bold=True))
+          for salt_event in salt_yml[salted_host]:
+            event = salt_yml[salted_host][salt_event]
+            for salt_event_type in event:
+              if salt_event_type == "result":
+                if event[salt_event_type] is False:
+                  failed +=1
+                  host_fail += 1
+                  parsed_summary.append(red("\tFailure: {}".format(salt_event), bold=True))
+                  if len(event['changes']) == 0:
+                    parsed_summary.append(red("\tReason: {}".format(event['comment']), bold=False))
+                  else:
+                    parsed_summary.append(red("\tReason: {} (rc={} ; error={})".format(event['comment'],
+                          event['changes']['retcode'],event['changes']['stderr']), bold=False))
+                elif event[salt_event_type] is True:
+                  worked += 1
+                  host_work += 1
+              if salt_event_type == "changes" and len(event[salt_event_type]) != 0:
+                changed += 1
+                host_change += 1
+                parsed_summary.append(white("\tChange: {}".format(event['comment']), bold=False))
 
-        if failed:
-            print
-            print(red("Summary", bold=True))
-            print(red(dump_json(summary)))
-            abort('One of states has failed')
-        else:
-            print
-            print(green("Summary", bold=True))
-            print(green(dump_json(summary)))
+          parsed_summary.append(yellow("\tSuccess: {}".format(host_work), bold=False))
+          parsed_summary.append(white("\tChanged: {}".format(host_change), bold=False))
+          parsed_summary.append(red("\tFailed: {}".format(host_fail), bold=False))
+
+        parsed_summary.append(blue("\nSummary:",bold=True))
+        parsed_summary.append(yellow("\tSuccess: {}".format(worked), bold=True))
+        parsed_summary.append(white("\tChanged: {}".format(changed), bold=True))
+        parsed_summary.append(red("\tFailed: {}".format(failed), bold=True))
+
+        # Any failures print the yaml in full then the summary otherwise just the summary
+        if failed > 0:
+          sudo("cat {}".format(remote_temp_salt))
+
+        for summary_line in parsed_summary:
+          print(summary_line)
+
+        assert (failed == 0),"Failures encountered: %d" % failed
 
         # let's cleanup but only if everything was ok
-        sudo('rm {}'.format(remote_temp))
+        sudo('rm {}'.format(remote_temp_salt))
     else:
         if 'saltmaster' in env and env.saltmaster:
-            sudo("salt {} {} -t {}".format(selector, args, timeout))
+          manage_down()
+          sudo("salt {} {} -t {}".format(selector, args, timeout))
+          manage_down()
         else:
             sudo("salt-call {}".format(args))
 
