@@ -1,3 +1,8 @@
+## Version 0.6.0
+
+ * Migrate from json highstate parser to yaml based
+ * Test connectivity with salt minions
+
 ## Version 0.5.1
 
  * Allow to ssh through jumpbox to VMs w/o public dns entry (EC2)
