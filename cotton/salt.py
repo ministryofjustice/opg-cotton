@@ -160,7 +160,7 @@ def _reconfig_minion(salt_server):
     minion_contents = {
         'master': salt_server,
         'id': str(fqdn),
-    }
+        }
     put(StringIO(fqdn), '/etc/hostname', use_sudo=True, mode=0644)
     sudo("echo '127.0.0.1 {}' >> /etc/hosts".format(fqdn))
     sudo("hostname {}".format(fqdn))
@@ -251,6 +251,18 @@ def bootstrap_master(salt_roles=None, master='localhost', flags='-M', **kwargs):
     _bootstrap_salt(master=master, flags=flags, salt_roles=salt_roles, **kwargs)
 
 
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
+
+
 @vm_task
 def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False):
     """
@@ -264,35 +276,45 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
     param skip_manage_down: If True then skip the check to run a manage.down to establish unresponsive minions
     """
 
-    parsed_summary = []
+    if 'saltmaster' in env and env.saltmaster:
+        have_saltmaster = True
+    else:
+        have_saltmaster = False
+
+    if not have_saltmaster:
+        skip_manage_down = True
 
     def manage_down():
-      if not skip_manage_down:
-        unresponsive = False
-        remote_temp_salt_manage = sudo('mktemp')
+        if not skip_manage_down:
+            unresponsive = False
+            remote_temp_salt_manage = sudo('mktemp')
 
-        sudo("salt-run manage.down -t {} > {}".format(timeout, remote_temp_salt_manage))
-        sudo("chmod 664 {}".format(remote_temp_salt_manage))
+            sudo("salt-run manage.down -t {} > {}".format(timeout, remote_temp_salt_manage))
+            sudo("chmod 664 {}".format(remote_temp_salt_manage))
 
-        output_fd_salt_manage = StringIO()
-        get(remote_temp_salt_manage, output_fd_salt_manage)
-        output_salt_manage = output_fd_salt_manage.getvalue()
+            output_fd_salt_manage = StringIO()
+            get(remote_temp_salt_manage, output_fd_salt_manage)
+            output_salt_manage = output_fd_salt_manage.getvalue()
 
-        parsed_summary.append(white("\nUnresponsive minions:", bold=True))
-        if not output_salt_manage:
-          output_salt_manage = "None"
-          color = yellow
-        else:
-          color = red
-          unresponsive = True
-        parsed_summary.append(color("\n\t{}".format(output_salt_manage.replace("\n","\n\t")), bold=True))
+            print(white("\nUnresponsive minions:", bold=True))
+            if not output_salt_manage:
+                output_salt_manage = "None"
+                color = yellow
+            else:
+                color = red
+                unresponsive = True
+            print(color("\n\t{}".format(output_salt_manage.replace("\n","\n\t")), bold=True))
 
-        assert (not unresponsive),"Unresponsive salt minions: %s" % ''.join(parsed_summary)
+            if unresponsive:
+                abort("Unresponsive salt minions")
 
-        # Tidy up if minions all ok
-        sudo('rm {}'.format(remote_temp_salt_manage))
+            # Tidy up if minions all ok
+            sudo('rm {}'.format(remote_temp_salt_manage))
+
+    manage_down()
 
     if parse_highstate:
+        parsed_summary = []
         remote_temp_salt = sudo('mktemp')
         # Fabric merges stdout & stderr for sudo. So output is useless
         # Store the stdout in yaml format to a temp file and parse after
@@ -301,10 +323,9 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
         # adds jid and header information it causes the yaml parser to thrown an exception.
         # Therefore run a manage.down separately to check for problematic minions
 
+
         if 'saltmaster' in env and env.saltmaster:
-          manage_down()
-          sudo("salt {} {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
-          manage_down()
+            sudo("salt {} {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
         else:
             sudo("salt-call {} --out=yaml > {}".format(args, remote_temp_salt))
 
@@ -317,37 +338,37 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
         failed = 0
         changed = 0
         worked = 0
-        salt_yml = yaml.safe_load(output_salt)
+        salt_yml = ordered_load(output_salt)
 
         for salted_host in salt_yml:
-          host_fail = 0
-          host_work = 0
-          host_change = 0
-          parsed_summary.append(blue("\n{}:".format(salted_host), bold=True))
-          for salt_event in salt_yml[salted_host]:
-            event = salt_yml[salted_host][salt_event]
-            for salt_event_type in event:
-              if salt_event_type == "result":
-                if event[salt_event_type] is False:
-                  failed +=1
-                  host_fail += 1
-                  parsed_summary.append(red("\tFailure: {}".format(salt_event), bold=True))
-                  if len(event['changes']) == 0:
-                    parsed_summary.append(red("\tReason: {}".format(event['comment']), bold=False))
-                  else:
-                    parsed_summary.append(red("\tReason: {} (rc={} ; error={})".format(event['comment'],
-                          event['changes']['retcode'],event['changes']['stderr']), bold=False))
-                elif event[salt_event_type] is True:
-                  worked += 1
-                  host_work += 1
-              if salt_event_type == "changes" and len(event[salt_event_type]) != 0:
-                changed += 1
-                host_change += 1
-                parsed_summary.append(white("\tChange: {}".format(event['comment']), bold=False))
+            host_fail = 0
+            host_work = 0
+            host_change = 0
+            parsed_summary.append(blue("\n{}:".format(salted_host), bold=True))
+            for salt_event in salt_yml[salted_host]:
+                event = salt_yml[salted_host][salt_event]
+                for salt_event_type in event:
+                    if salt_event_type == "result":
+                        if event[salt_event_type]:
+                            worked += 1
+                            host_work += 1
+                        else:
+                            failed +=1
+                            host_fail += 1
+                            parsed_summary.append(red("\tFailure: {}".format(salt_event), bold=True))
+                            parsed_summary.append(red("\t Reason: {}".format(event['comment']), bold=False))
+                            parsed_summary.append(red("\t  Debug: {}".format(event), bold=False))
+                    elif salt_event_type == "changes" and len(event[salt_event_type]):
+                        changed += 1
+                        host_change += 1
+                        parsed_summary.append(
+                            white("\tChange: {name} - Comment: {comment}".format(
+                                name=event['name'],
+                                comment=event['comment']), bold=False))
 
-          parsed_summary.append(yellow("\tSuccess: {}".format(host_work), bold=False))
-          parsed_summary.append(white("\tChanged: {}".format(host_change), bold=False))
-          parsed_summary.append(red("\tFailed: {}".format(host_fail), bold=False))
+            parsed_summary.append(yellow("\tSuccess: {}".format(host_work), bold=False))
+            parsed_summary.append(white("\tChanged: {}".format(host_change), bold=False))
+            parsed_summary.append(red("\tFailed: {}".format(host_fail), bold=False))
 
         parsed_summary.append(blue("\nSummary:",bold=True))
         parsed_summary.append(yellow("\tSuccess: {}".format(worked), bold=True))
@@ -355,21 +376,22 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
         parsed_summary.append(red("\tFailed: {}".format(failed), bold=True))
 
         # Any failures print the yaml in full then the summary otherwise just the summary
-        if failed > 0:
-          sudo("cat {}".format(remote_temp_salt))
+        if failed:
+            sudo("cat {}".format(remote_temp_salt))
 
         for summary_line in parsed_summary:
-          print(summary_line)
+            print(summary_line)
 
-        assert (failed == 0),"Failures encountered: %d" % failed
+        if failed:
+            abort("Failures encountered: {}".format(failed))
 
         # let's cleanup but only if everything was ok
         sudo('rm {}'.format(remote_temp_salt))
     else:
-        if 'saltmaster' in env and env.saltmaster:
-          manage_down()
-          sudo("salt {} {} -t {}".format(selector, args, timeout))
-          manage_down()
+        if have_saltmaster:
+            sudo("salt {} {} -t {}".format(selector, args, timeout))
         else:
             sudo("salt-call {}".format(args))
+
+    manage_down()
 
