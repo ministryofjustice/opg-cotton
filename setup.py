@@ -28,4 +28,9 @@ setup(
     ],
     classifiers=[
     ],
+    entry_points="""
+    [console_scripts]
+    parsed-salt=cotton.cli:parsed_salt
+    parsed-salt-call=cotton.cli:parsed_salt_call
+    """,
 )

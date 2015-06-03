@@ -268,13 +268,18 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
     """
     `salt` / `salt-call` wrapper that:
     - checks if `env.saltmaster` is set to select between `salt` or `salt-call` command
-    - checks for output state.highstate and aborts on failure
+    - checks for output of state.highstate / state.sls and aborts on failure
     param selector: i.e.: '*', -G 'roles:foo'
     param args: i.e. state.highstate
     param parse_highstate: If True then salt output is yaml and parsed for Successes/Changes/Failures
+                           Works for both state.highstate and state.sls
     param timeout: Passed to salt as a timeout value (-t) in seconds
     param skip_manage_down: If True then skip the check to run a manage.down to establish unresponsive minions
     """
+    smart_salt(selector, args, parse_highstate=parse_highstate, timeout=timeout, skip_manage_down=skip_manage_down)
+
+
+def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False):
 
     if 'saltmaster' in env and env.saltmaster:
         have_saltmaster = True
@@ -324,8 +329,8 @@ def salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=Fal
         # Therefore run a manage.down separately to check for problematic minions
 
 
-        if 'saltmaster' in env and env.saltmaster:
-            sudo("salt {} {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
+        if have_saltmaster:
+            sudo("salt '{}' {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
         else:
             sudo("salt-call {} --out=yaml > {}".format(args, remote_temp_salt))
 
