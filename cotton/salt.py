@@ -394,7 +394,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
         sudo('rm {}'.format(remote_temp_salt))
     else:
         if have_saltmaster:
-            sudo("salt {} {} -t {}".format(selector, args, timeout))
+            sudo("salt '{}' {} -t {}".format(selector, args, timeout))
         else:
             sudo("salt-call {}".format(args))
 
