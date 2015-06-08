@@ -40,6 +40,7 @@ def parsed_salt():
     using fabric it ssh to localhost and calls `salt ...`
     """
     env.host_string = 'localhost'
+    env.saltmaster = True
     parser = argparser_parsed_salt(add_selector=True)
     args = parser.parse_args()
     smart_salt(selector=args.selector, args=' '.join(args.args), parse_highstate=not args.skip_parse, timeout=args.timeout, skip_manage_down=args.skip_manage_down)

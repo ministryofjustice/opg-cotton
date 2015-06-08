@@ -1,5 +1,9 @@
 ## Version 0.6.1
 
+ * bugfix parsed-salt
+
+## Version 0.6.1
+
  * yaml state parser output updates
  * expose yaml parser as command line scripts bin/parsed-salt...
 
