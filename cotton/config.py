@@ -161,7 +161,6 @@ def get_provider_zone_config():
     else:
         zone = config['provider_zones']['default']
 
-
     cfg = config['provider_zones'][zone]
     if 'driver' not in cfg:
         raise RuntimeError("Provider zone %s is missing the 'driver' option!" % zone)

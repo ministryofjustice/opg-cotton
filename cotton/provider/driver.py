@@ -13,15 +13,6 @@ class Provider(object):
     def status(self):
         raise NotImplementedError()
 
-    def create(self, **kwargs):
-        """
-        return: server object
-        """
-        raise NotImplementedError()
-
-    def terminate(self, server):
-        raise NotImplementedError()
-
     def exists(self, name):
         servers = self.filter(name=name)
         return len(servers) > 0

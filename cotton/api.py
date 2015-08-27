@@ -59,10 +59,6 @@ def get_provider_connection():
     return env.provider
 
 
-def workon_fallback(func):
-    raise NotImplementedError("workon_fallback has been removed. Replace @workon_fallback and @task with just @vm_task")
-
-
 def vm_task(func):
     """
     Decorate this task as operating on a VM, and set up fabric ``env`` object to target this host.
@@ -166,39 +162,6 @@ def dict_stringize_keys(data):
         else:
             res[str(k)] = v
     return res
-
-
-@task
-@load_provider
-def create(name=None):
-    from cotton.fabextras import wait_for_shell
-
-    zone_config = get_provider_zone_config()
-    vm_spec = zone_config.get('vm-defaults', {})
-    vm_spec['name'] = name
-
-    try:
-        vm_spec['tags']
-    except KeyError:
-        vm_spec['tags'] = {}
-
-    if 'environment' in env:
-        vm_spec['tags']['env'] = env.environment
-    if 'project' in env:
-        vm_spec['tags']['project'] = env.project
-
-    try:
-        vm = env.provider.create(**vm_spec)
-    except ValueError as e:
-        abort(red(e))
-    configure_fabric_for_host(name)  # TODO: we used to pass server object, check impact
-    wait_for_shell()
-    return vm
-
-
-@vm_task
-def destroy():
-    env.provider.terminate(env.vm)
 
 
 @vm_task

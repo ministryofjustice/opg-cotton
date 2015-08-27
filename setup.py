@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cotton',
-    version='0.6.2',
+    version='0.7.0',
     url='http://github.com/ministryofjustice/opg-cotton',
     license='MIT',
     author='',
@@ -21,10 +21,8 @@ setup(
         'jinja2',
         'python-dateutil',
         'pyyaml',
-        'GitPython>=0.3.2.RC1',
-        'apache-libcloud>=0.14.0-beta3',
+        'GitPython',
         'pptable',
-        'lxml'
     ],
     classifiers=[
     ],

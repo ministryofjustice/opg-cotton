@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 import sys
 import time
-import getpass
 
 from fabric.api import settings, sudo, run, hide, local, task, parallel, env
 from fabric.exceptions import NetworkError
@@ -13,41 +12,6 @@ from cotton.api import vm_task
 # thanks to
 # http://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
 ansi_escape = re.compile(r'\x1b[^m]*m')
-
-
-@vm_task
-def iptables():
-    """ 
-    retrieve all iptables rules
-    """
-    command = "iptables -L"
-    run_on_all_hosts(command)
-
-
-def run_on_all_hosts(cmd):
-    """ 
-    Wrapper to run a given command on all hosts (including the master)
-    """
-    wrapped_command = "sudo salt '*' cmd.run '%s'" % cmd 
-    run(wrapped_command)
-
-@vm_task
-def uptime():
-    """
-    execute uptime
-    """
-    run("uptime")
-
-
-@vm_task
-def ipython():
-    """
-    starts ipython within fabric context
-    useful for development
-    """
-    # imports IPython internally to make it optional
-    import IPython
-    IPython.embed()
 
 
 @vm_task
@@ -138,22 +102,3 @@ def smart_rsync_project(*args, **kwargs):
 
     if for_user:
         sudo("chown -R {} {}".format(for_user, directory))
-
-
-def get_password(system, username, desc=None):
-    """
-    Wraps getpass and keyring to provide secure password functions.
-
-    keyring will store the password in the system's password manager, i.e. Keychain
-    on OS X.
-
-    """
-    import keyring
-    if not desc:
-        desc = "Password for user '%s': " % username
-
-    password = keyring.get_password(system, username)
-    if not password:
-        password = getpass.getpass(desc)
-        keyring.set_password(system, username, password)
-    return password

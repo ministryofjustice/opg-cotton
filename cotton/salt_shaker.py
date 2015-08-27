@@ -6,13 +6,16 @@ import tempfile
 import shutil
 import stat
 import errno
+import yaml
 
 from git import Repo
 from git.exc import GitCommandError
+
 from textwrap import dedent
 
 from fabric.api import local, task, env
 
+logger = logging.getLogger(__name__)
 
 SSH_WRAPPER_SCRIPT = """#!/bin/bash
 ssh -o VisualHostKey=no "$@"
@@ -151,7 +154,6 @@ class Shaker(object):
         self.roots_dir = os.path.join(root_dir, salt_root_path, salt_root)
         self.repos_dir = os.path.join(root_dir, salt_root_path, clone_path)
 
-        self._setup_logger()
         self.fetched_formulas = {}
         self.parsed_requirements_files = set()
         self.first_requirement_file = os.path.join(root_dir, formula_requirements_path)
@@ -181,9 +183,35 @@ class Shaker(object):
         except OSError:
             pass
 
-    def _setup_logger(self):
-        logging.basicConfig()
-        self.logger = logging.getLogger(__name__)
+    def _get_formula_exports(self, formula_dir, formula_name):
+        """
+        based on metadata.yml generates a list of exports
+        if file is unreadable or exports are not supplied defaults to `re.sub('-formula$', '', name)`
+
+        example metadata.yaml for formula foobar-formula
+        ```
+        exports:
+        - foo
+        - bar
+        ```
+
+        Returns:
+            a list of directories from formula to link (exports supplied by formula)
+        """
+        metadata_path = os.path.join(formula_dir, 'metadata.yml')
+        exports_default = [formula_name]
+        try:
+            with open(metadata_path, 'r') as metadata_file:
+                metadata = yaml.load(metadata_file)
+                logger.debug("Shaker::_get_formula_exports: metadata {}".format(metadata))
+                exports = metadata.get("exports", exports_default)
+        except IOError:
+            logger.debug("Shaker::_get_formula_exports: skipping unreadable {}".format(
+                metadata_path
+            ))
+            exports = exports_default
+        logger.debug("Shaker::_get_formula_exports: exports {}".format(exports))
+        return exports
 
     def _is_from_top_level_requirement(self, file):
         return file == self.first_requirement_file
@@ -247,16 +275,16 @@ class Shaker(object):
 
             self.parsed_requirements_files.add(req_file)
 
-            self.logger.info("Checking %s" % req_file)
+            logger.info("Checking %s" % req_file)
             for formula in self.parse_requirements_file(req_file):
-                (repo_dir, _) = self.install_requirement(formula)
+                repo_dir = self.install_requirement(formula)
 
                 self.fetched_formulas.setdefault(formula['name'], formula)
 
                 # Check for recursive formula dep.
                 new_req_file = os.path.join(repo_dir, 'formula-requirements.txt')
                 if os.path.isfile(new_req_file):
-                    self.logger.info(
+                    logger.info(
                         "Adding {new} to check form {old} {revision}".format(
                             new=new_req_file,
                             old=req_file,
@@ -285,46 +313,48 @@ class Shaker(object):
     def install_requirement(self, formula):
         """
         Install the requirement as specified by the formula dictionary and
+        formula = {
+            'url': url,
+            'name': name,
+            'revision': rev or 'master',
+            'explicit_revision': bool(rev),
+        }
         return the directory symlinked into the roots_dir
         """
         self.check_for_version_clash(formula)
+        formula_repo_dir = os.path.join(self.repos_dir, formula['name'] + "-formula")
+        repo = self._open_repo(formula_repo_dir, formula['url'])
+        sha = self._fetch_and_resolve_sha(formula, repo)
 
-        repo_dir = os.path.join(self.repos_dir, formula['name'] + "-formula")
+        if sha is None:  # TODO: what does it mean?
+            return formula_repo_dir
 
-        with GitSshEnvWrapper():
-            repo = self._open_repo(repo_dir, formula['url'])
+        if not repo.head.is_valid():  # TODO: fail if edited locally
+            logging.info("Resetting invalid head on: {}\n".format(formula['name']))
+            repo.head.reset(commit=sha, index=True, working_tree=True)
 
-            sha = self._fetch_and_resolve_sha(formula, repo)
+        if repo.head.commit.hexsha != sha:
+            logging.info("Resetting sha mismatch on: {}\n".format(formula['name']))
+            repo.head.reset(commit=sha, index=True, working_tree=True)
 
-            target = os.path.join(self.roots_dir, formula['name'])
-            if sha is None:
-                if not os.path.exists(target):
-                    raise RuntimeError("%s: Formula marked as resolved but target '%s' didn't exist" % (formula['name'], target))
-                return repo_dir, target
+        logger.debug("{formula[name]} is at {formula[revision]}".format(formula=formula))
 
-            # TODO: Check if the working tree is dirty, and (if request/flagged)
-            # reset it to this sha
-            if not repo.head.is_valid():
-                logging.debug("Resetting invalid head on: {}\n".format(formula['name']))
-                repo.head.reset(commit=sha, index=True, working_tree=True)
+        exports = self._get_formula_exports(formula_repo_dir, formula['name'])
+        for export in exports:
+            source = os.path.join(formula_repo_dir, export)
+            target = os.path.join(self.roots_dir, export)
 
-            if repo.head.commit.hexsha != sha:
-                logging.debug("Resetting sha mismatch on: {}\n".format(formula['name']))
-                repo.head.reset(commit=sha, index=True, working_tree=True)
+            if os.path.exists(target):
+                raise RuntimeError("{}: Target '{}' conflicts with something else" % (export, target))
 
-            self.logger.debug("{formula[name]} is at {formula[revision]}".format(formula=formula))
-
-        source = os.path.join(repo_dir, formula['name'])
-        if os.path.exists(target):
-            raise RuntimeError("%s: Target '%s' conflicts with something else" % (formula['name'], target))
-
-        if os.path.exists(source):
-            relative_source = os.path.relpath(source, os.path.dirname(target))
-            os.symlink(relative_source, target)
+            if os.path.exists(source):
+                print "Linking {}-formula:{}".format(formula['name'], export)
+                relative_source = os.path.relpath(source, os.path.dirname(target))
+                os.symlink(relative_source, target)
 
         self._link_dynamic_modules(formula)
 
-        return repo_dir, target
+        return formula_repo_dir
 
     def _link_dynamic_modules(self, formula):
         repo_dir = os.path.join(self.repos_dir, formula['name'] + "-formula")
@@ -342,11 +372,11 @@ class Shaker(object):
                     sourcefile = os.path.join(relative_source, name)
                     targetfile = os.path.join(targetdir, name)
                     try:
-                        self.logger.info("linking {}".format(sourcefile))
+                        logger.info("linking {}".format(sourcefile))
                         os.symlink(sourcefile, targetfile)
                     except OSError as e:
                         if e.errno == errno.EEXIST:  # already exist
-                            self.logger.info(
+                            logger.info(
                                 "skipping to linking {} as there is a file with higher priority already there".
                                 format(sourcefile))
                         else:
@@ -364,7 +394,7 @@ class Shaker(object):
         if previously_fetched is not None and \
            previously_fetched.get('top_level_requirement', False) and \
            previously_fetched['explicit_revision'] and self.override_version_from_toplevel:
-            self.logger.info("Overriding {name} version of {new_ver} to {old_ver} from project formula requirements".format(
+            logger.info("Overriding {name} version of {new_ver} to {old_ver} from project formula requirements".format(
                 name=formula['name'],
                 new_ver=formula['revision'],
                 old_ver=previously_fetched['revision'],
@@ -376,7 +406,7 @@ class Shaker(object):
             return None
 
         elif 'sha' not in formula:
-            self.logger.debug("Resolving {formula[revision]} for {formula[name]}".format(
+            logger.debug("Resolving {formula[revision]} for {formula[name]}".format(
                 formula=formula))
 
             target_sha = self._rev_to_sha(formula, repo)

@@ -34,13 +34,6 @@ class StaticProvider(Provider):
         zone_config = get_provider_zone_config()
         return zone_config['hosts']
 
-    def create(self, **kwargs):
-        """
-        return: server object
-        """
-        name = kwargs['name']
-        return self.filter(name=name)[0]
-
     def filter(self, **kwargs):
         """
         return: list of objects matching filter args

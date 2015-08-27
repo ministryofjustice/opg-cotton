@@ -3,8 +3,6 @@ Jinja2
 PyYAML
 boto
 python-dateutil
-ipython
+ipython>=3.0.0,<.4.0.0
 GitPython
-apache-libcloud>=0.14.0-beta3
 pptable
-lxml
