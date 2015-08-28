@@ -1,5 +1,6 @@
-## Version 0.8.0
+## Version 0.8.1
  * salt code refactoring
+ * package rename
 
 ## Version 0.7.0
  * introduce exports to salt.shaker

@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='opg-cotton',
-    version='0.8.0',
+    version='0.8.1',
     url='http://github.com/ministryofjustice/opg-cotton',
     license='MIT',
     author='',
     author_email='',
     description='',
     long_description=__doc__,
-    packages=['cotton'],
-    zip_safe=True,
+    packages=find_packages(),
+    zip_safe=False,
     platforms='any',
     install_requires=[
         'fabric',
