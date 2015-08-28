@@ -41,7 +41,7 @@ import os
 import copy
 
 from fabric.api import env
-from cotton.colors import *
+from cotton.colors import red, green, yellow
 
 
 def dict_deepmerge(source, target):
@@ -98,7 +98,7 @@ def get_config():
         path = '{}/projects'.format(config_base_dir)
     config_dirs = []
 
-    #let's walk config dir
+    # let's walk config dir
     while True:
         config_dirs.append(path)
         path = os.path.dirname(path)
@@ -166,4 +166,3 @@ def get_provider_zone_config():
         raise RuntimeError("Provider zone %s is missing the 'driver' option!" % zone)
 
     return cfg
-

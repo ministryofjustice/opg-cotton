@@ -32,7 +32,8 @@ def parsed_salt_call():
     env.host_string = 'localhost'
     parser = argparser_parsed_salt()
     args = parser.parse_args()
-    smart_salt(None, args=' '.join(args.args), parse_highstate=not args.skip_parse, timeout=args.timeout, skip_manage_down=args.skip_manage_down)
+    smart_salt(None, args=' '.join(args.args), parse_highstate=not args.skip_parse,
+               timeout=args.timeout, skip_manage_down=args.skip_manage_down)
 
 
 def parsed_salt():
@@ -43,4 +44,5 @@ def parsed_salt():
     env.saltmaster = True
     parser = argparser_parsed_salt(add_selector=True)
     args = parser.parse_args()
-    smart_salt(selector=args.selector, args=' '.join(args.args), parse_highstate=not args.skip_parse, timeout=args.timeout, skip_manage_down=args.skip_manage_down)
+    smart_salt(selector=args.selector, args=' '.join(args.args), parse_highstate=not args.skip_parse,
+               timeout=args.timeout, skip_manage_down=args.skip_manage_down)

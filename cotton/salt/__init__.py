@@ -5,7 +5,7 @@ root/
 `-- config/projects/{project}/pillar/
 """
 
-from cotton.salt.pillar import *
-from cotton.salt.shaker import *
-from cotton.salt.wrappers import *
-from cotton.salt.tasks import *
+from cotton.salt.pillar import *  # noqa
+from cotton.salt.shaker import *  # noqa
+from cotton.salt.wrappers import *  # noqa
+from cotton.salt.tasks import *  # noqa

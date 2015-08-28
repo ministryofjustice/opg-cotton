@@ -1,21 +1,15 @@
 from __future__ import print_function
-import getpass
-import time
 import datetime
 import dateutil.parser
 import copy
-import pprint
 
 import boto
 import boto.ec2
 import boto.cloudformation
 import boto.iam
 
-from fabric.api import env, prompt
-
-from cotton.colors import *
+from cotton.colors import green, yellow
 from cotton.provider.driver import Provider
-from cotton.config import get_provider_zone_config
 
 
 class AWSProvider(Provider):

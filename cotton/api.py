@@ -19,8 +19,8 @@ import fabric.decorators
 from fabric.api import abort
 
 from cotton.provider.driver import provider_class
-from cotton.common import *
-from cotton.colors import *
+from cotton.common import *  # noqa
+from cotton.colors import *  # noqa
 from cotton.config import get_provider_zone_config
 
 
@@ -53,7 +53,7 @@ def get_provider_connection():
         print("Selected provider zone config:")
         print(zone_config)
 
-    if not 'provider' in env or not env.provider:
+    if 'provider' not in env or not env.provider:
         p_class = provider_class(zone_config['driver'])
         env.provider = p_class(**zone_config)
     return env.provider
@@ -172,7 +172,7 @@ def info():
 @task
 @load_provider
 def status():
-    #TODO: format output
+    # TODO: format output
     statuses = env.provider.status()
     pptable(statuses)
 

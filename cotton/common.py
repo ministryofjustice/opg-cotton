@@ -14,15 +14,8 @@ if 'provider_zone' not in env:
 if 'force' not in env:
     env.force = False
 
-#???????
 if 'instances' not in env:
     env.instances = {}
-#env.instance = {
-#    'host_string': {
-#        'instance': InstanceObject(),
-#        'privider': 'AWS',
-#    }
-#}
 
 
 @task

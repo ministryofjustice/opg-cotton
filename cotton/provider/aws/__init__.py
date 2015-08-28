@@ -1,2 +1,1 @@
-from driver import AWSProvider as Driver
-
+from driver import AWSProvider as Driver  # noqa

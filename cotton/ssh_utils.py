@@ -168,6 +168,7 @@ def rsync_project(
         print("[%s] rsync_project: %s" % (env.host_string, cmd))
     return local(cmd, capture=capture)
 
+
 @task
 @needs_host
 def ssh(ssh_opts='', remote_cmd=None):

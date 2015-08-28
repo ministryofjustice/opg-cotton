@@ -1,1 +1,1 @@
-from driver import StaticProvider as Driver
+from driver import StaticProvider as Driver  # noqa

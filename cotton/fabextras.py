@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from fabric.api import settings, sudo, run, hide, local, task, parallel, env, get
+from fabric.api import settings, sudo, run, hide, local, env, get
 from fabric.exceptions import NetworkError
 
 from cotton.ssh_utils import rsync_project
@@ -30,7 +30,7 @@ def ssh_forward(lport, rport):
     """
     open ssh session and tunnel port ssh_forward:local_port,remote_port
     """
-    #TODO: enable it to work with env.gateway
+    # TODO: enable it to work with env.gateway
     if 'key_filename' in env and env.key_filename:
         local('ssh -o "ServerAliveInterval 30" -A -i {key} -p {port} -L {lport}:127.0.0.1:{rport} {user}@{host}'.format(key=env.key_filename, user=env.user, host=env.host, port=env.port, lport=lport, rport=rport))
     else:
@@ -84,7 +84,7 @@ def wait_for_shell():
 
 # [GR] Slightly modified to use Paul's new rsync library - old one will be deprecate once we're happy with this.
 def smart_rsync_project(*args, **kwargs):
-    """ 
+    """
     rsync_project wrapper that is aware of insecure fab argument and can chown the target directory
 
     :param for_user: optional, chowns the directory to this user at the end
@@ -94,7 +94,7 @@ def smart_rsync_project(*args, **kwargs):
     else:
         for_user = None
     directory = args[0]
-  
+
     if env.disable_known_hosts:
         kwargs['ssh_opts'] = kwargs.get('ssh_opts', '') + " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 

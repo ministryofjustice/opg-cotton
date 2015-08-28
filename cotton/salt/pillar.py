@@ -4,7 +4,7 @@ import yaml
 
 from fabric.api import env
 
-from cotton.colors import red, yellow, green, blue, white
+from cotton.colors import red, green
 
 
 def get_unrendered_pillar_location():

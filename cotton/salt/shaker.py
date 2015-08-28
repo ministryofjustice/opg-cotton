@@ -18,6 +18,7 @@ SSH_WRAPPER_SCRIPT = """#!/bin/bash
 ssh -o VisualHostKey=no "$@"
 """
 
+
 class GitSshEnvWrapper(object):
     def __enter__(self):
         """
@@ -91,7 +92,8 @@ class Shaker(object):
 
             smart_rsync_project('/srv/salt-formulas', 'vendor/_root/', for_user='root', extra_opts='-L', delete=True)
             smart_rsync_project('/srv/salt', 'salt/', for_user='root', extra_opts='-L', delete=True)
-            smart_rsync_project('/srv/pillar', '{}/'.format(get_pillar_location()), for_user='root', extra_opts='-L', delete=True)
+            smart_rsync_project('/srv/pillar', '{}/'.format(get_pillar_location()), for_user='root', extra_opts='-L',
+                delete=True)
 
 
     **3. Add the extra root to the salt master config**
@@ -140,7 +142,7 @@ class Shaker(object):
     dynamic_modules_dirs = ['_modules', '_grains', '_renderers', '_returners', '_states']
 
     def __init__(self, root_dir, salt_root_path='vendor',
-                 clone_path='formula-repos', salt_root='_root', formula_requirements_path = 'formula-requirements.txt'):
+                 clone_path='formula-repos', salt_root='_root', formula_requirements_path='formula-requirements.txt'):
         """
         There is a high chance you don't want to change the paths here.
 
@@ -517,4 +519,3 @@ class Shaker(object):
             print(" done")
 
             have_updated = True
-

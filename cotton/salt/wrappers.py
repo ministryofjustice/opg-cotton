@@ -50,7 +50,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
             else:
                 color = red
                 unresponsive = True
-            print(color("\n\t{}".format(output_salt_manage.replace("\n","\n\t")), bold=True))
+            print(color("\n\t{}".format(output_salt_manage.replace("\n", "\n\t")), bold=True))
 
             if unresponsive:
                 abort("Unresponsive salt minions")
@@ -99,7 +99,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
                             worked += 1
                             host_work += 1
                         else:
-                            failed +=1
+                            failed += 1
                             host_fail += 1
                             parsed_summary.append(red("\tFailure: {}".format(salt_event), bold=True))
                             parsed_summary.append(red("\t Reason: {}".format(event['comment']), bold=False))
@@ -116,7 +116,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
             parsed_summary.append(white("\tChanged: {}".format(host_change), bold=False))
             parsed_summary.append(red("\tFailed: {}".format(host_fail), bold=False))
 
-        parsed_summary.append(blue("\nSummary:",bold=True))
+        parsed_summary.append(blue("\nSummary:", bold=True))
         parsed_summary.append(yellow("\tSuccess: {}".format(worked), bold=True))
         parsed_summary.append(white("\tChanged: {}".format(changed), bold=True))
         parsed_summary.append(red("\tFailed: {}".format(failed), bold=True))

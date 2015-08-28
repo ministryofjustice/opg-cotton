@@ -3,8 +3,8 @@ inspired buy fabric.colors but with tty detection support
 """
 from __future__ import print_function
 import sys
+# TODO: PR for fabric
 
-#TODO: PR for fabric
 
 def _wrap_with(code):
 
@@ -21,6 +21,7 @@ def _wrap_with(code):
         return inner_tty
     else:
         return inner_notty
+
 
 red = _wrap_with('31')
 green = _wrap_with('32')

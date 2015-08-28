@@ -14,7 +14,7 @@ provider_zone:
 
 """
 from __future__ import print_function
-from cotton.colors import *
+from cotton.colors import yellow
 from cotton.provider.driver import Provider
 from cotton.config import get_provider_zone_config
 

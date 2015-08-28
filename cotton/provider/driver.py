@@ -37,7 +37,6 @@ class Provider(object):
         raise NotImplementedError()
 
 
-
 def provider_class(provider_name):
     """
     returns class object for specific provider_name
@@ -52,11 +51,10 @@ def provider_class(provider_name):
     else:
         provider_path = provider_name
 
-    #pickup provider module
+    # pickup provider module
     provider_module = importlib.import_module('.'.join(provider_path.split('.')[:-1]))
 
-    #pickup provider class
+    # pickup provider class
     p_class = getattr(provider_module, provider_path.split('.')[-1])
     assert issubclass(p_class, Provider)
     return p_class
-
