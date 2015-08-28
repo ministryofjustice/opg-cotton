@@ -4,8 +4,7 @@ cotton
 Project independent shared fabric extensions to bootstrap first VM.
 
 It solves three problems:
- - how to easily bootstrap VM in any supported environment
- - how to easily reach and manage this node
+ - how to easily reach and manage VM
  - how to store
    - shared organisation config
    - shared project config
@@ -74,17 +73,10 @@ example ~/.cotton.yaml::
           - name: master-staging
             ip: 1.2.3.5
       aws_staging:
-        image_id: ami-3a689f4d
         provisioning_ssh_key: ../config/default.pem
         provisioning_ssh_key_name: default
         provisioning_user: ubuntu
         gateway: 1.2.3.4
-        instance_type: m1.small
-        security_groups:
-          - default
-          - ssh
-          - web-server
-          - salt-master
         region_name: eu-west-1
         driver: aws
 
@@ -94,4 +86,3 @@ driver status
 
 :aws: fully implemented
 :static: fully implemented (a good fallback if api access is not available)
-:vcloud: only selection, status, filtering, termination, no provisioning part

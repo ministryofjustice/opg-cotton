@@ -3,17 +3,16 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cotton',
-    version='0.7.0',
+    name='opg-cotton',
+    version='0.8.0',
     url='http://github.com/ministryofjustice/opg-cotton',
     license='MIT',
     author='',
     author_email='',
     description='',
     long_description=__doc__,
-    packages=find_packages(),
-    package_data={'cotton': ['share/*']},
-    zip_safe=False,
+    packages=['cotton'],
+    zip_safe=True,
     platforms='any',
     install_requires=[
         'fabric',

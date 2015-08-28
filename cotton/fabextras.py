@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from fabric.api import settings, sudo, run, hide, local, task, parallel, env
+from fabric.api import settings, sudo, run, hide, local, task, parallel, env, get
 from fabric.exceptions import NetworkError
 
 from cotton.ssh_utils import rsync_project
@@ -35,6 +35,11 @@ def ssh_forward(lport, rport):
         local('ssh -o "ServerAliveInterval 30" -A -i {key} -p {port} -L {lport}:127.0.0.1:{rport} {user}@{host}'.format(key=env.key_filename, user=env.user, host=env.host, port=env.port, lport=lport, rport=rport))
     else:
         local('ssh -o "ServerAliveInterval 30" -A -p {port} -L {lport}:127.0.0.1:{rport} {user}@{host}'.format(key=env.key_filename, user=env.user, host=env.host, port=env.port, lport=lport, rport=rport))
+
+
+@vm_task
+def getfile(remote_path):
+    get(remote_path)
 
 
 def is_not_empty(path, use_sudo=False, verbose=False):

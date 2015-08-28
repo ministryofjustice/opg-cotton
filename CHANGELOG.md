@@ -1,3 +1,10 @@
+## Version 0.8.0
+ * salt code refactoring
+
+## Version 0.7.0
+ * introduce exports to salt.shaker
+ * remove VM creation
+ 
 ## Version 0.6.1
 
  * bugfix parsed-salt
