@@ -3,6 +3,5 @@ Jinja2
 PyYAML
 boto
 python-dateutil
-ipython>=3.0.0,<.4.0.0
 GitPython
 pptable
