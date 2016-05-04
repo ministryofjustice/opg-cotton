@@ -96,14 +96,15 @@ as paths to search in when compiling from the top.sls file. The search paths are
  * merge paths (if they exist, passed as arguments)
  * all config project paths
 
-To pass a list of merge paths to the task you will need to implement support for a custom list format, as fabric only supports
- strings as command line arguments. The easiest being `;` us for separation, then you can set the `env.pillar_roots`
- using something similar to below:
 
-```
+To pass a list of merge paths to the task you will need to implement support for a custom list format, as fabric only supports
+strings as command line arguments. The easiest being `;` us for separation, then you can set the :code:`env.pillar_roots`
+using something similar to below:
+
+.. code-block:: python
+
     if args is not None:
         env.pillar_roots = args.split(';')
-```
 
 
 tests
@@ -111,8 +112,6 @@ tests
 
 run tests with the following command
 
-```python
+.. code-block:: bash
 
     $python setup.py test
-
-```
