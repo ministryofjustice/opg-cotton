@@ -101,7 +101,7 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
                     # a variable. This would make the filename start with / and instead of
                     # writing under dest_location it will try to write in /
                     if isinstance(file_short, str):
-                        files_to_render.append(file_short.replace('.', '/') + '.sls')
+                        files_to_render.append('./' + file_short.replace('.', '/') + '.sls')
     else:
         # let's select all files from pillar directory
         for pillar in pillars:
@@ -146,8 +146,8 @@ def __render_templates(files_to_render, dest_location, jinja_env):
     """
     Render and save templates
     """
-    errors = 0
-
+    errors = []
+    print("Rendering items {}".format(files_to_render))
     from jinja2.exceptions import TemplateNotFound
 
     for template_file in files_to_render:
@@ -168,14 +168,14 @@ def __render_templates(files_to_render, dest_location, jinja_env):
                 f.write(template_rendered)
 
         except TemplateNotFound:
-            errors += 1
+            errors.append(template_file)
             print(red("Pillar template_file not found: {} --> {}".format(template_file, filename)))
 
-    if not errors:
+    if not len(errors):
         print(green("Pillar was successfully rendered in: {}".format(dest_location)))
     else:
         print(red("Pillar could not compile {} template(s)".format(errors)))
 
-    return errors == 0
+    return len(errors) == 0
 
 get_pillar_location = get_rendered_pillar_location
