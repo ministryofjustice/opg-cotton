@@ -147,7 +147,7 @@ def __render_templates(files_to_render, dest_location, jinja_env):
     Render and save templates
     """
     errors = []
-    print("Rendering items {}".format(files_to_render))
+
     from jinja2.exceptions import TemplateNotFound
 
     for template_file in files_to_render:
@@ -174,7 +174,9 @@ def __render_templates(files_to_render, dest_location, jinja_env):
     if not len(errors):
         print(green("Pillar was successfully rendered in: {}".format(dest_location)))
     else:
-        print(red("Pillar could not compile {} template(s)".format(errors)))
+        print(red("Pillar could not compile the following templates:"))
+        for error in errors:
+            print(red(" - {}").format(error))
 
     return len(errors) == 0
 
