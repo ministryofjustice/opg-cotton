@@ -32,9 +32,9 @@ def get_unrendered_pillar_locations(include_project=True):
     if include_project:
         pillar_locations.append(get_unrendered_pillar_location())
 
-    if 'pillar_roots' in env:
+    if 'pillar_dirs' in env:
         fab_location = os.path.dirname(env.real_fabfile)
-        for root in env.pillar_roots:
+        for root in env.pillar_dirs:
             pillar_locations.append(os.path.abspath(os.path.join(fab_location, root)))
 
     return pillar_locations
@@ -134,8 +134,8 @@ def __load_pillar_dirs(pillar_dir, projects_location):
 
     pillars.append(pillar_dir)
 
-    if 'pillar_roots' in env:
-        for root in env.pillar_roots:
+    if 'pillar_dirs' in env:
+        for root in env.pillar_dirs:
             pillars.append(os.path.abspath(root))
 
     return list(set(pillars))

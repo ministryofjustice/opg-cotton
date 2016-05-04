@@ -7,7 +7,7 @@ class TestPillarMethods(unittest.TestCase):
 
     env.project = 'foo'
     expected_roots = [os.path.dirname(os.path.realpath(__file__))+ '/data']
-    env.pillar_roots = expected_roots
+    env.pillar_dirs = expected_roots
     env.real_fabfile = __file__
 
     def test_get_unrendered_pillar_location(self):
@@ -17,14 +17,14 @@ class TestPillarMethods(unittest.TestCase):
         self.assertNotEqual(result.find(expected), -1)
 
     def test_get_unrendered_pillar_locations_no_project(self):
-        self.assertEqual(pillar.get_unrendered_pillar_locations(False), env.pillar_roots)
+        self.assertEqual(pillar.get_unrendered_pillar_locations(False), env.pillar_dirs)
 
     def test_get_unrendered_pillar_locations_with_project(self):
         result = pillar.get_unrendered_pillar_location()
         pillar_locations = pillar.get_unrendered_pillar_locations()
-        self.assertNotEqual(pillar_locations, env.pillar_roots)
-        env.pillar_roots.insert(0, result)
-        self.assertEqual(pillar_locations, env.pillar_roots)
+        self.assertNotEqual(pillar_locations, env.pillar_dirs)
+        env.pillar_dirs.insert(0, result)
+        self.assertEqual(pillar_locations, env.pillar_dirs)
 
     def test_get_projects_location(self):
         location = pillar._get_projects_location()

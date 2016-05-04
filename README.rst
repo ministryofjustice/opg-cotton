@@ -98,13 +98,13 @@ as paths to search in when compiling from the top.sls file. The search paths are
 
 
 To pass a list of merge paths to the task you will need to implement support for a custom list format, as fabric only supports
-strings as command line arguments. The easiest being `;` us for separation, then you can set the :code:`env.pillar_roots`
+strings as command line arguments. The easiest being `;` us for separation, then you can set the :code:`env.pillar_dirs`
 using something similar to below:
 
 .. code-block:: python
 
     if args is not None:
-        env.pillar_roots = args.split(';')
+        env.pillar_dirs = args.split(';')
 
 
 tests
