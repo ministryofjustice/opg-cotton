@@ -30,4 +30,7 @@ setup(
     parsed-salt=cotton.cli:parsed_salt
     parsed-salt-call=cotton.cli:parsed_salt_call
     """,
+    # For tests
+    test_suite='nose.collector',
+    tests_require=['nose'],
 )
