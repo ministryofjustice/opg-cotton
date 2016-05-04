@@ -86,3 +86,33 @@ driver status
 
 :aws: fully implemented
 :static: fully implemented (a good fallback if api access is not available)
+
+merging pillars
+---------------
+
+We now have the ability to specify multiple pillar paths on the source machine, these are loaded into the Jinja environment
+as paths to search in when compiling from the top.sls file. The search paths are fifo and are searched in the following order
+ * config project specific path
+ * merge paths (if they exist, passed as arguments)
+ * all config project paths
+
+To pass a list of merge paths to the task you will need to implement support for a custom list format, as fabric only supports
+ strings as command line arguments. The easiest being `;` us for separation, then you can set the `env.pillar_roots`
+ using something similar to below:
+
+```
+    if args is not None:
+        env.pillar_roots = args.split(';')
+```
+
+
+tests
+-----
+
+run tests with the following command
+
+```python
+
+    $python setup.py test
+
+```
