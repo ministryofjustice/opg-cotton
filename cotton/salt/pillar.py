@@ -4,7 +4,7 @@ import yaml
 
 from fabric.api import env
 
-from cotton.colors import red, green
+from cotton.colors import red, green, yellow
 
 
 def get_unrendered_pillar_location():
@@ -41,8 +41,9 @@ def get_unrendered_pillar_locations(include_project=True):
 
 
 def _get_projects_location():
-    fab_location = os.path.dirname(env.real_fabfile)
-    return os.path.abspath(os.path.join(fab_location, '../config/projects/'))
+    if env.use_project_dir:
+        fab_location = os.path.dirname(env.real_fabfile)
+        return os.path.abspath(os.path.join(fab_location, '../config/projects/'))
 
 
 def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_top_sls=True):
@@ -66,6 +67,9 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
     from jinja2 import FileSystemLoader
     from jinja2.exceptions import TemplateNotFound
 
+    if 'use_project_dir' not in 'env':
+        env.use_project_dir = False
+
     if projects_location is None:
         projects_location = _get_projects_location()
 
@@ -75,7 +79,13 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
     # if so we may try to connect to something that doesn't actually exist
     template_dirs = list(pillars)
     template_dirs.append(projects_location)
-    jinja_env = Environment(loader=FileSystemLoader(template_dirs))
+    # String out None or anything empty
+    template_dirs = filter(None, template_dirs)
+
+    if len(template_dirs):
+        jinja_env = Environment(loader=FileSystemLoader(template_dirs))
+    else:
+        raise RuntimeError("No source template directories are specified, aborting")
 
     files_to_render = []
     dest_location = tempfile.mkdtemp()
@@ -102,7 +112,7 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
                     # writing under dest_location it will try to write in /
                     if isinstance(file_short, str):
                         files_to_render.append('./' + file_short.replace('.', '/') + '.sls')
-    else:
+    elif len(pillars):
         # let's select all files from pillar directory
         for pillar in pillars:
             for root, dirs, files in os.walk(pillar):
@@ -125,16 +135,18 @@ def __load_pillar_dirs(pillar_dir, projects_location):
     :return pillars: list
     """
     pillars = []
-    if pillar_dir is None:
+
+    # We can bypass the project directory when creating the pillar
+    if pillar_dir is None and env.use_project_dir is True:
         if "pillar_dir" in env:
             pillar_dir = env.pillar_dir
         else:
             assert env.project, "env.project or env.pillar_dir must be specified"
             pillar_dir = os.path.join(projects_location, env.project, 'pillar')
 
-    pillars.append(pillar_dir)
+        pillars.append(pillar_dir)
 
-    if 'pillar_dirs' in env:
+    if 'pillar_dirs' in env and env.pillar_dirs:
         for root in env.pillar_dirs:
             pillars.append(os.path.abspath(root))
 
