@@ -21,12 +21,32 @@ def get_unrendered_pillar_location():
     return pillar_location
 
 
+def get_unrendered_pillar_locations(include_project=True):
+    """
+    Returns all local pillar locations
+    If a boolean false is passed as an argument it will not include the project pillar
+    """
+
+    pillar_locations = []
+
+    if include_project:
+        pillar_locations.append(get_unrendered_pillar_location())
+
+    if 'pillar_dirs' in env:
+        fab_location = os.path.dirname(env.real_fabfile)
+        for root in env.pillar_dirs:
+            pillar_locations.append(os.path.abspath(os.path.join(fab_location, root)))
+
+    return pillar_locations
+
+
 def _get_projects_location():
     fab_location = os.path.dirname(env.real_fabfile)
     return os.path.abspath(os.path.join(fab_location, '../config/projects/'))
 
 
 def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_top_sls=True):
+
     """
     Returns path to rendered pillar.
     Use to render pillars written in jinja locally not to upload unwanted data to network.
@@ -49,15 +69,13 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
     if projects_location is None:
         projects_location = _get_projects_location()
 
-    if pillar_dir is None:
-        if "pillar_dir" in env:
-            pillar_dir = env.pillar_dir
-        else:
-            assert env.project, "env.project or env.pillar_dir must be specified"
-            pillar_dir = os.path.join(projects_location, env.project, 'pillar')
+    pillars = __load_pillar_dirs(pillar_dir, projects_location)
 
-    jinja_env = Environment(
-        loader=FileSystemLoader([pillar_dir, projects_location]))
+    # We need to merge our directory trees here so that we don't mess with the pillars list
+    # if so we may try to connect to something that doesn't actually exist
+    template_dirs = list(pillars)
+    template_dirs.append(projects_location)
+    jinja_env = Environment(loader=FileSystemLoader(template_dirs))
 
     files_to_render = []
     dest_location = tempfile.mkdtemp()
@@ -86,27 +104,80 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
                         files_to_render.append('./' + file_short.replace('.', '/') + '.sls')
     else:
         # let's select all files from pillar directory
-        for root, dirs, files in os.walk(pillar_dir):
-            rel_path = os.path.relpath(root, pillar_dir)
-            for file_name in files:
-                files_to_render.append(os.path.join(rel_path, file_name))
+        for pillar in pillars:
+            for root, dirs, files in os.walk(pillar):
+                rel_path = os.path.relpath(root, pillar)
+                for file_name in files:
+                    files_to_render.append(os.path.join(rel_path, file_name))
 
-    # render and save templates
-    for template_file in files_to_render:
-        filename = os.path.abspath(os.path.join(dest_location, template_file))
-        print("Pillar template_file: {} --> {}".format(template_file, filename))
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.makedirs(os.path.dirname(filename))
-        try:
-            template_rendered = jinja_env.get_template(template_file).render(env=env)
-        except TemplateNotFound:
-            template_rendered = ''
-            print(red("Pillar template_file not found: {} --> {}".format(template_file, filename)))
-        with open(os.path.join(dest_location, template_file), 'w') as f:
-            f.write(template_rendered)
+    if __render_templates(files_to_render, dest_location, jinja_env) is False:
+        print(red("Aborting due to pillar failing to render"))
+        exit(-1)
 
-    print(green("Pillar was successfully rendered in: {}".format(dest_location)))
     return dest_location
 
+
+def __load_pillar_dirs(pillar_dir, projects_location):
+    """
+    Loads all of the pillar directories into a list
+    :param pillar_dir: string
+    :param projects_location: string
+    :return pillars: list
+    """
+    pillars = []
+    if pillar_dir is None:
+        if "pillar_dir" in env:
+            pillar_dir = env.pillar_dir
+        else:
+            assert env.project, "env.project or env.pillar_dir must be specified"
+            pillar_dir = os.path.join(projects_location, env.project, 'pillar')
+
+    pillars.append(pillar_dir)
+
+    if 'pillar_dirs' in env:
+        for root in env.pillar_dirs:
+            pillars.append(os.path.abspath(root))
+
+    return list(set(pillars))
+
+
+def __render_templates(files_to_render, dest_location, jinja_env):
+
+    """
+    Render and save templates
+    """
+    errors = []
+
+    from jinja2.exceptions import TemplateNotFound
+
+    for template_file in files_to_render:
+        filename = os.path.abspath(os.path.join(dest_location, template_file))
+
+        print("Pillar template_file: {} --> {}".format(template_file, filename))
+
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+
+        try:
+            print("Attempting to load template_file: {}".format(template_file))
+            template_rendered = jinja_env.get_template(template_file).render(env=env)
+            print(green("Pillar template_file rendered: {} --> {}".format(template_file, filename)))
+
+            # Only write the template file if we can actually render it
+            with open(os.path.join(dest_location, template_file), 'w') as f:
+                f.write(template_rendered)
+
+        except TemplateNotFound:
+            errors.append(template_file)
+            print(red("Pillar template_file not found: {} --> {}".format(template_file, filename)))
+
+    if not len(errors):
+        print(green("Pillar was successfully rendered in: {}".format(dest_location)))
+    else:
+        print(red("Pillar could not compile the following templates:"))
+        for error in errors:
+            print(red(" - {}").format(error))
+
+    return len(errors) == 0
 
 get_pillar_location = get_rendered_pillar_location
