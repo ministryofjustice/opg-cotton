@@ -126,6 +126,7 @@ def _pillar_from_top_sls(dest_location, jinja_env):
 
     return files_to_render
 
+
 def _set_template_env(pillars, projects_location):
     from jinja2 import Environment
     from jinja2 import FileSystemLoader

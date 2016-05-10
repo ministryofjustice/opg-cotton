@@ -91,20 +91,37 @@ merging pillars
 ---------------
 
 We now have the ability to specify multiple pillar paths on the source machine, these are loaded into the Jinja environment
-as paths to search in when compiling from the top.sls file. The search paths are fifo and are searched in the following order
- * config project specific path
- * merge paths (if they exist, passed as arguments)
- * all config project paths
-
+as paths to search in when compiling from the top.sls file. The search paths are fifo and are searched in the following order:
+ * If enabled via the enviroment variable :code:`env.use_project_dir` the project directory
+ * Merge paths passed as arguments via the :code:`pillar_dirs=` directive. This is a delimited string, and supports both absolute and relative paths
+ * If enabled via the enviroment variable :code:`env.use_project_dir` the config directory
 
 To pass a list of merge paths to the task you will need to implement support for a custom list format, as fabric only supports
 strings as command line arguments. The easiest being `;` us for separation, then you can set the :code:`env.pillar_dirs`
-using something similar to below:
+using something similar to below in your projects fabfile:
 
 .. code-block:: python
 
-    if args is not None:
-        env.pillar_dirs = args.split(';')
+    @task
+    def target_stackname(stackname='develop', pillar_dirs=None, use_project_dir=False):
+        env.stackname = stackname
+        env.provider_zone = 'my_provider_zone'
+        env.domainname = 'develop.tld'
+        env.pillar_dirs = pillar_dirs.split(';')
+        env.use_project_dir = use_project_dir
+
+This can them be called from the command line with something similar to below:
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:pillar_dirs="/path/to/project;../common_pillars/" insecure rsync
+
+This will merge the pillars before rsyncing them to the server based on the directory structure passed through, to emulate
+the more traditional behaviour of cotton, call the above code snippet as below
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:use_project_dir=True insecure rsync
 
 
 tests
