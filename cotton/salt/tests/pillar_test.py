@@ -40,7 +40,7 @@ class TestPillarMethods(unittest.TestCase):
         expected_roots = env.pillar_dirs
         env.pillar_dirs = None
         with self.assertRaises(RuntimeError) as context:
-           pillar.get_rendered_pillar_location()
+            pillar.get_rendered_pillar_location()
 
         expected_message = 'No source template directories are specified, aborting'
         self.assertEqual(str(context.exception), expected_message)
@@ -67,9 +67,3 @@ class TestPillarMethods(unittest.TestCase):
         self.assertNotEqual(result.find('/tmp/tmp'), -1)
         env.use_project_dir = True
 
-    # def test_load_pillar_dirs(self):
-    #     project_location=os.path.abspath(os.path.join(__file__ , '../../config/projects/'))
-    #     expected = '/config/projects/{}/pillar'.format(env.project)
-    #     result = pillar.__load_pillar_dirs(pillar_dir=env.pillar_dirs,projects_location=project_location)
-    #     print result
-    #     self.assertEqual(result.find(expected), -1)
