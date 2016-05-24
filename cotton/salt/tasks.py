@@ -8,7 +8,7 @@ from cotton.salt import get_pillar_location, smart_salt, Shaker
 
 
 @vm_task
-def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=60, skip_manage_down=False):
+def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
     """
     `salt` / `salt-call` wrapper that:
     - checks if `env.saltmaster` is set to select between `salt` or `salt-call` command
@@ -20,7 +20,7 @@ def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=
     param timeout: Passed to salt as a timeout value (-t) in seconds
     param skip_manage_down: If True then skip the check to run a manage.down to establish unresponsive minions
     """
-    smart_salt(selector, args, parse_highstate=parse_highstate, timeout=timeout, skip_manage_down=skip_manage_down)
+    smart_salt(selector, args, parse_highstate=parse_highstate, timeout=timeout, skip_manage_down=skip_manage_down, prefix=prefix)
 
 
 @vm_task
@@ -53,8 +53,8 @@ def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=
 
 
 @vm_task
-def highstate(selector="'*'", parse_highstate=False, timeout=60, skip_manage_down=False):
-    salt(selector, 'state.highstate', parse_highstate, timeout, skip_manage_down)
+def highstate(selector="'*'", parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
+    salt(selector, 'state.highstate', parse_highstate, timeout, skip_manage_down, prefix)
 
 
 @task

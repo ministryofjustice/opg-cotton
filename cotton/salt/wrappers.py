@@ -21,7 +21,7 @@ def yaml_ordered_load(stream, loader_class=yaml.Loader, object_pairs_hook=Ordere
     return yaml.load(stream, OrderedLoader)
 
 
-def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False):
+def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
 
     if 'saltmaster' in env and env.saltmaster:
         have_saltmaster = True
@@ -71,7 +71,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
         # Therefore run a manage.down separately to check for problematic minions
 
         if have_saltmaster:
-            sudo("salt '{}' {} --out=yaml -t {} > {}".format(selector, args, timeout, remote_temp_salt))
+            sudo("salt {} '{}' {} --out=yaml -t {} > {}".format(prefix, selector, args, timeout, remote_temp_salt))
         else:
             sudo("salt-call {} --out=yaml > {}".format(args, remote_temp_salt))
 
@@ -135,7 +135,7 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
         sudo('rm {}'.format(remote_temp_salt))
     else:
         if have_saltmaster:
-            sudo("salt '{}' {} -t {}".format(selector, args, timeout))
+            sudo("salt {} '{}' {} -t {}".format(prefix, selector, args, timeout))
         else:
             sudo("salt-call {}".format(args))
 
