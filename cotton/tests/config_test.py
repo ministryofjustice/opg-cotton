@@ -28,7 +28,6 @@ class TestConfigMethods(unittest.TestCase):
         result = config._generate_config_path_and_dirs(os.path.dirname(os.path.realpath(__file__)), [])
         self.assertGreater(len(result[1]), 0)
         self.assertEqual(result[1], "{}/projects/{}".format(env.project, env.project))
-        print(result)
         self.assertEqual(len(result[0]), 0)
         env.project = proj_dir
 
@@ -39,3 +38,10 @@ class TestConfigMethods(unittest.TestCase):
         result = config._generate_config_path_and_dirs(os.path.dirname(os.path.realpath(__file__)))
         self.assertEqual(len(result[0]), 2)
         self.assertEqual(result[0], expected)
+
+    def test_deep_merge(self):
+        dict_a = {'foo':'bar'}
+        dict_b = {'bar':'baz'}
+        expected = {'foo':'bar', 'bar':'baz'}
+
+        self.assertEqual(expected, config.dict_deepmerge(dict_b, dict_a))

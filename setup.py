@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='opg-cotton',
-    version='0.8.8',
+    version='0.8.9',
     url='http://github.com/ministryofjustice/opg-cotton',
     license='MIT',
     author='',
@@ -30,7 +30,4 @@ setup(
     parsed-salt=cotton.cli:parsed_salt
     parsed-salt-call=cotton.cli:parsed_salt_call
     """,
-    # For tests
-    test_suite='nose.collector',
-    tests_require=['nose'],
 )

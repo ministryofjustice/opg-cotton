@@ -2,5 +2,5 @@
 
 test:
 	@echo "Running python unit tests"
-	python setup.py test
+	nose2 --config nose2.config		
 

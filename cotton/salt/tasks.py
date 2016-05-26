@@ -1,10 +1,11 @@
 import os
+import time
 
 from fabric.api import sudo, local, task, env
-
+from cotton.colors import green, yellow
 from cotton.api import vm_task
 from cotton.fabextras import smart_rsync_project
-from cotton.salt import get_pillar_location, smart_salt, Shaker
+from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call
 
 
 @vm_task
@@ -21,6 +22,11 @@ def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=
     param skip_manage_down: If True then skip the check to run a manage.down to establish unresponsive minions
     """
     smart_salt(selector, args, parse_highstate=parse_highstate, timeout=timeout, skip_manage_down=skip_manage_down, prefix=prefix)
+
+
+@vm_task
+def unattended_highstate():
+    salt_call('event.send', 'salt/custom/start_highstate')
 
 
 @vm_task

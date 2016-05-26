@@ -145,6 +145,7 @@ def _config_files_from_env(config_files):
         config_files.append({'path': '~/.config.yaml',
                              'preferred': '~/.cotton.yaml'})
         config_files.append({'path': '~/.cotton.yaml'})
+        config_files.append({'path': './cotton.yaml' })
 
     return config_files
 

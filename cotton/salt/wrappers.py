@@ -21,8 +21,11 @@ def yaml_ordered_load(stream, loader_class=yaml.Loader, object_pairs_hook=Ordere
     return yaml.load(stream, OrderedLoader)
 
 
-def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
+def salt_call(method, args):
+    sudo("salt-call {} {}".format(method, args))
 
+
+def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
     if 'saltmaster' in env and env.saltmaster:
         have_saltmaster = True
     else:

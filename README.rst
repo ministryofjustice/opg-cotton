@@ -124,6 +124,29 @@ the more traditional behaviour of cotton, call the above code snippet as below
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:use_project_dir=True insecure rsync
 
 
+unattended high stating and grain targeting
+--------------------------------------
+
+Cotton now supports targetting on grains or compound queries. To target via a grain you can use the following
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname insecure highstate:prefix='-G',selector='${ROLE1}'
+
+
+To target via a compound match
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:use_project_dir=True insecure highstate:prefix='-C',selector='@${ROLE1} or @{$ROLE2}'
+
+Finally you can use a remote_highstate call to now get the system to highstate without any intervention
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname insecure unattended_highstate
+
+
 tests
 -----
 
@@ -131,4 +154,4 @@ run tests with the following command
 
 .. code-block:: bash
 
-    $python setup.py test
+    $ sh runtests.sh
