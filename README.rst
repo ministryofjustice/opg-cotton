@@ -146,6 +146,15 @@ Finally you can use a remote_highstate call to now get the system to highstate w
 
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname insecure unattended_highstate
 
+highstate polling
+-----------------
+
+We can poll if a highstate is completed now by running a command against the salt-master from the build environment
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname highstate_complete
+
 
 tests
 -----

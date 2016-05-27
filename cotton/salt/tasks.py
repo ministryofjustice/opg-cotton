@@ -5,7 +5,7 @@ from fabric.api import sudo, local, task, env
 from cotton.colors import green, yellow
 from cotton.api import vm_task
 from cotton.fabextras import smart_rsync_project
-from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call
+from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 
 
 @vm_task
@@ -26,7 +26,34 @@ def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=
 
 @vm_task
 def unattended_highstate():
-    salt_call('event.send', 'salt/custom/start_highstate')
+    salt_event('salt/custom/start_highstate')
+
+
+@vm_task
+def highstate_complete():
+    timeout = 15
+    from cStringIO import StringIO
+    result = StringIO()
+
+    salt_run(method='jobs.active', stdout=result)
+
+    if len(result.getvalue().strip()):
+        print(yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout)))
+        time.sleep(timeout)
+        highstate_complete()
+    else:
+        print(green("Highstate complete.\n"))
+
+    result.close()
+
+@vm_task
+def salt_event(args):
+    """
+    Fire a custom reactor event
+    :param args: tag for the custom event
+    :return:
+    """
+    salt_call('event.send', args)
 
 
 @vm_task

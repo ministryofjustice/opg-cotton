@@ -21,8 +21,13 @@ def yaml_ordered_load(stream, loader_class=yaml.Loader, object_pairs_hook=Ordere
     return yaml.load(stream, OrderedLoader)
 
 
-def salt_call(method, args):
+def salt_call(method, args=''):
     sudo("salt-call {} {}".format(method, args))
+
+
+# Allow us to call methods like jobs.active
+def salt_run(method, args='', pty=False, quiet=False, stdout=None):
+    sudo("salt-run {} {}".format(method, args), pty=pty, quiet=quiet, stdout=stdout, combine_stderr=True)
 
 
 def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
