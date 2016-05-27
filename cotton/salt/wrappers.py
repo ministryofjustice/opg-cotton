@@ -21,7 +21,7 @@ def yaml_ordered_load(stream, loader_class=yaml.Loader, object_pairs_hook=Ordere
     return yaml.load(stream, OrderedLoader)
 
 
-def salt_call(method, args):
+def salt_call(method, args=''):
     sudo("salt-call {} {}".format(method, args))
 
 

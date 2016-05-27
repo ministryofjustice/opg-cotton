@@ -30,6 +30,19 @@ def unattended_highstate():
 
 
 @vm_task
+def highstate_complete():
+    result = salt_call(method='jobs.active')
+
+    print result
+    if result is not None:
+        print(green("Highstate is still running"))
+        time.sleep(30)
+        highstate_complete()
+    else:
+        print(green("Highstate complete"))
+
+
+@vm_task
 def salt_event(args):
     """
     Fire a custom reactor event
