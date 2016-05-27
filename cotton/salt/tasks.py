@@ -31,7 +31,8 @@ def unattended_highstate():
 
 @vm_task
 def highstate_complete():
-    result = salt_run(method='jobs.active')
+    result = ''
+    salt_run(method='jobs.active', quiet=True, stdout=result)
 
     print result
     if result is not None:

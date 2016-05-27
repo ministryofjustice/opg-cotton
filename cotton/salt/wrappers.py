@@ -26,8 +26,8 @@ def salt_call(method, args=''):
 
 
 # Allow us to call methods like jobs.active
-def salt_run(method, args=''):
-    sudo("salt-run {} {}".format(method, args))
+def salt_run(method, args='', stdout=None, quiet=False):
+    sudo("salt-run {} {}".format(method, args), stdout=stdout, quiet=quiet)
 
 
 def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
