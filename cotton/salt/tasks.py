@@ -35,10 +35,10 @@ def highstate_complete():
     from cStringIO import StringIO
     result = StringIO()
 
-    salt_run(method='jobs.active', stdout=result, quiet=True)
+    salt_run(method='jobs.active', stdout=result)
 
     if len(result.getvalue().strip()):
-        print(yellow("Highstate is still running.\n Polling in {} seconds.\n".format(timeout)))
+        print(yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout)))
         time.sleep(timeout)
         highstate_complete()
     else:
