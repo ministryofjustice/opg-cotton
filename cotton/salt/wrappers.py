@@ -25,6 +25,11 @@ def salt_call(method, args):
     sudo("salt-call {} {}".format(method, args))
 
 
+# Allow us to call methods like jobs.active
+def salt_run(method, args):
+    sudo("salt-run {} {}".format(method, args))
+
+
 def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_down=False, prefix=''):
     if 'saltmaster' in env and env.saltmaster:
         have_saltmaster = True

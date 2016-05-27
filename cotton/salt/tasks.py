@@ -29,6 +29,7 @@ def unattended_highstate():
     salt_call('event.send', 'salt/custom/start_highstate')
 
 
+
 @vm_task
 def rsync():
     '''
