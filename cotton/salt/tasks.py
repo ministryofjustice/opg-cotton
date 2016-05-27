@@ -26,8 +26,17 @@ def salt(selector="'*'", args='state.highstate', parse_highstate=False, timeout=
 
 @vm_task
 def unattended_highstate():
-    salt_call('event.send', 'salt/custom/start_highstate')
+    salt_event('salt/custom/start_highstate')
 
+
+@vm_task
+def salt_event(args):
+    """
+    Fire a custom reactor event
+    :param args: tag for the custom event
+    :return:
+    """
+    salt_call('event.send', args)
 
 
 @vm_task
