@@ -142,4 +142,3 @@ def smart_salt(selector, args, parse_highstate=False, timeout=60, skip_manage_do
         else:
             sudo("salt-call {}".format(args))
 
-    manage_down()
