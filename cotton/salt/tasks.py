@@ -5,7 +5,7 @@ from fabric.api import sudo, local, task, env
 from cotton.colors import green, yellow
 from cotton.api import vm_task
 from cotton.fabextras import smart_rsync_project
-from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call
+from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 
 
 @vm_task
@@ -31,7 +31,7 @@ def unattended_highstate():
 
 @vm_task
 def highstate_complete():
-    result = salt_call(method='jobs.active')
+    result = salt_run(method='jobs.active')
 
     print result
     if result is not None:
