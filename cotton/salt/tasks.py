@@ -31,12 +31,12 @@ def unattended_highstate():
 
 @vm_task
 def highstate_complete():
-    from StringIO import StringIO
+    from cStringIO import StringIO
 
     result = StringIO()
     salt_run(method='jobs.active', stdout=result)
 
-    print result, type(result), result.succeeded, result.failed
+    print result, type(result), result.getvalue()
     if result is not None:
         print(green("Highstate is still running"))
         time.sleep(30)
