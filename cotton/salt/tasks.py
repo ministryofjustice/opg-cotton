@@ -31,9 +31,9 @@ def unattended_highstate():
 
 @vm_task
 def highstate_complete():
-    result = salt_run(method='jobs.active', pty=True)
+    result = salt_run(method='jobs.active')
 
-    print result
+    print result, type(result), result.succeeded, result.failed
     if result is not None:
         print(green("Highstate is still running"))
         time.sleep(30)
