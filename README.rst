@@ -124,6 +124,28 @@ the more traditional behaviour of cotton, call the above code snippet as below
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:use_project_dir=True insecure rsync
 
 
+pillar roots
+------------
+
+We can now support pillar roots via a command line argument, each of the pillars get uploaded to a separate directory under
+/srv/pillar_roots.
+
+To add multiple pillars for pillar_roots you need to set the :code:`env.pillar_roots` variable, this can be done similarly to merging pillars.
+
+.. code-block:: python
+
+    @task
+    def target_stackname(stackname='develop', pillar_roots=None, use_project_dir=False):
+        env.stackname = stackname
+        env.provider_zone = 'my_provider_zone'
+        env.domainname = 'develop.tld'
+        env.pillar_roots = pillar_roots.split(';')
+        env.use_project_dir = use_project_dir
+
+.. code-block:: bash
+
+    $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname:pillar_roots="/common/data/;/more/common/data" insecure rsync
+
 unattended high stating and grain targeting
 --------------------------------------
 
@@ -154,7 +176,6 @@ We can poll if a highstate is completed now by running a command against the sal
 .. code-block:: bash
 
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname highstate_complete
-
 
 tests
 -----

@@ -93,6 +93,12 @@ def smart_rsync_project(*args, **kwargs):
         for_user = kwargs.pop('for_user')
     else:
         for_user = None
+
+    if 'do_not_reset_mask' in kwargs:
+        do_not_reset_mask = kwargs.pop('do_not_reset_mask')
+    else:
+        do_not_reset_mask = False
+
     directory = args[0]
 
     if env.disable_known_hosts:
@@ -105,5 +111,5 @@ def smart_rsync_project(*args, **kwargs):
 
     rsync_project(*args, **kwargs)
 
-    if for_user:
+    if for_user and do_not_reset_mask is False:
         sudo("chown -R {} {}".format(for_user, directory))

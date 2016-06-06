@@ -1,7 +1,12 @@
 import unittest
 import os
+
+from mock import Mock
+import fabric
+
 from fabric.api import env
 from cotton.salt import tasks
+from cotton import fabextras
 
 class TestTaskMethods(unittest.TestCase):
     env.project = 'foo'
@@ -22,4 +27,11 @@ class TestTaskMethods(unittest.TestCase):
 
         tasks.rsync()
 
+    @unittest.expectedFailure
+    def test_smart_rsync_project(self):
+        assert 'Foo' == fabextras.smart_rsync_project()
+
+    @unittest.expectedFailure
+    def test_rsync(self):
+        tasks.rsync()
 

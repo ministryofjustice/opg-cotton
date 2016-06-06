@@ -4,7 +4,7 @@ import time
 from fabric.api import sudo, local, task, env
 from cotton.colors import green, yellow
 from cotton.api import vm_task
-from cotton.fabextras import smart_rsync_project
+from cotton.fabextras import smart_rsync_project, is_not_empty
 from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 
 
@@ -59,20 +59,114 @@ def salt_event(args):
 @vm_task
 def rsync():
     '''
-    Invokes salt_rync overriding the formula-requirements file path if specified
+    Invokes salt_rsync overriding the formula-requirements file path if specified
     '''
+    __rsync_salt()
+    __rsync_pillars()
+    __rsync_salt_formulas()
 
+
+def __rsync_salt():
     # -L will follow symlinks and pull vendor formula
     sudo("mkdir -p /srv/salt")
     smart_rsync_project('/srv/salt', 'salt/', for_user='root', extra_opts='-L', delete=True)
 
-    pillar_location = get_pillar_location(parse_top_sls=False)
-    sudo("mkdir -p /srv/pillar")
-    smart_rsync_project('/srv/pillar', '{}/'.format(pillar_location), for_user='root', extra_opts='-L', delete=True)
 
+def __rsync_pillars():
+
+    # Sync our project pillar to /srv/pillar
+    pillar_location = get_pillar_location(parse_top_sls=False)
+
+    base_pillar_path = '/srv/pillar'
+    __create_remote_pillar_location()
+
+    keys = []
+    paths = [base_pillar_path]
+
+    pillar_path = base_pillar_path
+
+    smart_rsync_project(
+        '{}'.format(pillar_path),
+        '{}/'.format(pillar_location),
+        for_user='root',
+        extra_opts='-L',
+        delete=True)
+
+    # Now if we have pillar roots, lets sync them
+    if 'pillar_roots' in env:
+        base_root_path = '/srv'
+        for pillar in env.pillar_roots:
+
+            pillar_path = "{}/{}".format(base_root_path, os.path.split(pillar)[-1])
+
+            dirs = os.listdir(pillar)
+
+            if len(dirs):
+                # If we have subdirectories, lets iterate them and add them independantly if they are a directory
+                for root_dir in dirs:
+                    if os.path.isdir("{}/{}".format(pillar, root_dir)):
+                        paths.append("{}/{}".format(pillar_path, root_dir))
+
+            paths.append(pillar_path)
+
+            for path in paths:
+                sudo("mkdir -p {}".format(path))
+
+            smart_rsync_project(
+                '{}'.format(pillar_path),
+                '{}/'.format(pillar),
+                for_user='root',
+                extra_opts='-L',
+                delete=True,
+                do_not_reset_mask=True
+            )
+
+        # Only run this if we have roots set up
+        keys.append({'salt_env': 'base', 'paths': paths})
+        __update_master_config(keys)
+
+    __reset_pillar_owner(base_root_path=pillar_path)
+
+
+def __create_remote_pillar_location(pillar_path='/srv/pillar'):
+    if is_not_empty(pillar_path):
+        # Clean out this directory, if we swap between pillar_roots and non pillar_roots versions we get gruff
+        sudo("rm -rf {}".format(pillar_path))
+
+    sudo("mkdir -p {}".format(pillar_path))
+    sudo("chown -R {} {}".format(env.user, pillar_path))
+
+
+def __reset_pillar_owner(pillar_owner='root', base_pillar_path='/srv/pillar', base_root_path='/srv/pillar_roots'):
+    # Finally we reset our pillar owner
+    sudo("chown -R {} {}".format(pillar_owner, base_pillar_path))
+    sudo("chown -R {} {}".format(pillar_owner, base_root_path))
+
+
+def __rsync_salt_formulas():
     sudo("mkdir -p /srv/salt-formulas")
     smart_rsync_project('/srv/salt-formulas', 'vendor/_root/', for_user='root', extra_opts='-L', delete=True)
 
+
+def __update_master_config(keys):
+    config = []
+    # Remove all the config between the blocks
+    sudo("sed -i '/##PILLAR_ROOT_TOKEN_BEGIN##/,/##PILLAR_ROOT_TOKEN_END##/{//!d}' /etc/salt/master")
+
+    config.append('pillar_roots:')
+
+    for roots in keys:
+        config.append('  {}:'.format(roots['salt_env']))
+        for path in roots['paths']:
+            config.append('    - {}'.format(path))
+
+    # Write this out
+    for line in config:
+        line = line.replace('/', '\\/')
+        sudo("sed -i 's/.*##PILLAR_ROOT_TOKEN_END##.*/{}\\n&/' /etc/salt/master".format(line))
+
+    # Bounce the service
+    sudo("stop salt-master || true && start salt-master")
 
 @vm_task
 def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=60, skip_manage_down=False):
