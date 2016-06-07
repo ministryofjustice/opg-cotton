@@ -166,6 +166,7 @@ def __update_master_config(keys):
         sudo("sed -i 's/.*##PILLAR_ROOT_TOKEN_END##.*/{}\\n&/' /etc/salt/master".format(line))
 
     restart_service('salt-master')
+    time.sleep(60)
 
 
 @vm_task
