@@ -165,8 +165,22 @@ def __update_master_config(keys):
         line = line.replace('/', '\\/')
         sudo("sed -i 's/.*##PILLAR_ROOT_TOKEN_END##.*/{}\\n&/' /etc/salt/master".format(line))
 
+    restart_service('salt-master')
+
+
+@vm_task
+def restart_service(service_name):
     # Bounce the service
-    sudo("stop salt-master || true && start salt-master")
+    from cStringIO import StringIO
+    result = StringIO()
+
+    sudo("stat /proc/1/exe | head - n1 | grep systemd", stdout=result)
+
+    if len(result.getvalue().strip()):
+        sudo("service {} restart".format(service_name))
+    else:
+        sudo("stop {} || true && start {}".format(service_name, service_name))
+
 
 @vm_task
 def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=60, skip_manage_down=False):
