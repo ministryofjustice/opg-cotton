@@ -175,12 +175,14 @@ def restart_service(service_name):
     from cStringIO import StringIO
     result = StringIO()
 
-    sudo("stat /proc/1/exe | head - n1 | grep systemd", stdout=result)
+    sudo("stat /proc/1/exe | head -n1 | grep systemd", stdout=result)
 
     if len(result.getvalue().strip()):
-        sudo("service {} restart".format(service_name))
+        cmd = "service {} restart".format(service_name)
     else:
-        sudo("stop {} || true && start {}".format(service_name, service_name))
+        cmd = "stop {} || true && start {}".format(service_name, service_name)
+
+    sudo(cmd)
 
 
 @vm_task
