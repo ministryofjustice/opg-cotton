@@ -97,7 +97,12 @@ def __rsync_pillars():
         base_root_path = '/srv'
         for pillar in env.pillar_roots:
 
-            pillar_path = "{}/{}".format(base_root_path, os.path.split(pillar)[-1])
+            if 'pillar_roots' in os.path.split(pillar)[-1]:
+                root_path = base_root_path
+            else:
+                root_path = '{}/pillar_roots'.format(base_root_path)
+
+            pillar_path = "{}/{}".format(root_path, os.path.split(pillar)[-1])
 
             dirs = os.listdir(pillar)
 
@@ -175,9 +180,9 @@ def restart_service(service_name):
     from cStringIO import StringIO
     result = StringIO()
 
-    sudo("stat /proc/1/exe | head -n1 | grep systemd", stdout=result)
+    sudo("stat /proc/1/exe | awk '/systemd/' {print NF} | wc -l", stdout=result)
 
-    if len(result.getvalue().strip()):
+    if result.getvalue().strip() != '0':
         cmd = "service {} restart".format(service_name)
     else:
         cmd = "stop {} || true && start {}".format(service_name, service_name)
