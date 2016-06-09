@@ -2,6 +2,8 @@
 WORKSPACE=`pwd`
 PATH=$WORKSPACE/venv/bin:/usr/local/bin:$PATH
 
+find . -type f -name '*.pyc' -exec rm {} +
+
 if [ ! -d "venv" ]; then
   virtualenv venv
 fi
