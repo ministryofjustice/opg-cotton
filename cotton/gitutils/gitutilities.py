@@ -23,14 +23,20 @@ class GitUtilities(object):
         self._pop_changes()
         self._pull_branch()
 
+    def _git_status(self):
+        return self.git.git.status()
+
+    def _checkout_file(self, file_name=''):
+        self.git.git.checkout(' -- {}'.format(file_name))
+
     def _stash_changes(self):
-        self.git.stash_save()
+        self.git.git.stash('save')
 
     def _pop_changes(self):
-        self.git.stash_pop()
+        self.git.git.stash('pop')
 
     def _checkout_branch(self, branch_name='master'):
-        self.git.checkout(branch_name)
+        self.git.git.checkout(branch_name)
 
     def _pull_branch(self):
-        self.git.pull('--rebase')
+        self.git.git.pull('--rebase')
