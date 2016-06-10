@@ -1,6 +1,7 @@
 import os
 from git import Repo
 from cotton.colors import yellow
+from git import Actor
 
 
 class GitUtilities(object):
@@ -9,13 +10,15 @@ class GitUtilities(object):
     change_set = []
     message = ''
     git = None
+    author = None
 
-    def __init__(self, changes=[], message='', root_path=''):
+    def __init__(self, changes=[], message='', root_path='', author='OPG Cotton', author_email='opg-cotton@nowhere'):
         self.change_set = changes
         self.message = message
 
         self.git = Repo(os.path.join(os.path.realpath(root_path), '.git/'))
         assert not self.git.bare
+        self.author = Actor(name=author, email=author_email)
 
     def commit_change_set(self):
         self._stash_changes()
@@ -28,11 +31,11 @@ class GitUtilities(object):
         index = self.git.index
         print(yellow("Staging change-set"))
         for change in changes:
-            path = os.path.join(self.git.working_tree_dir, change)
-            index.add(path)
+            self.git.git.add(change)
             print(yellow("Staged: {}".format(change)))
         print(yellow("Committing files with message: {}".format(message)))
-        index.commit(message)
+
+        index.commit(message, author=self.author, committer=self.author)
 
     def _git_status(self):
         return self.git.git.status()

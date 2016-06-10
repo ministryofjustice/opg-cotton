@@ -207,10 +207,16 @@ def highstate(selector="'*'", parse_highstate=False, timeout=60, skip_manage_dow
 
 
 @task
-def commit_build_files(changes='', message=''):
+def commit_build_files(changes='', message='', author='OPG Cotton', author_email='opg-cotton@nowhere'):
     changes = list(set(changes.split(' ')))
     from cotton.gitutils import GitUtilities
-    gutils = GitUtilities(changes=changes, message=message, root_path=os.path.dirname(env.real_fabfile))
+    gutils = GitUtilities(
+        changes=changes,
+        message=message,
+        root_path=os.path.dirname(env.real_fabfile),
+        author=author,
+        author_email=author_email
+    )
     gutils.commit_change_set()
 
 
