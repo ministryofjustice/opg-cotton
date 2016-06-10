@@ -25,12 +25,14 @@ class GitUtilities(object):
         self._git_commit(self.change_set, self.message)
 
     def _git_commit(self, changes=[], message=''):
+        index = self.git.index
         print(yellow("Staging change-set"))
         for change in changes:
-            self.git.git.add(change)
+            path = os.path.join(self.git.working_tree_dir, change)
+            index.add(path)
             print(yellow("Staged: {}".format(change)))
         print(yellow("Committing files with message: {}".format(message)))
-        self.git.git.commit("-a -m '{}'".format(message))
+        index.commit(message)
 
     def _git_status(self):
         return self.git.git.status()
