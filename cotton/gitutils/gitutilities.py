@@ -9,15 +9,15 @@ class GitUtilities(object):
 
     change_set = []
     message = ''
-    git = None
+    repository = None
     author = None
 
     def __init__(self, changes=[], message='', root_path='', author='OPG Cotton', author_email='opg-cotton@nowhere'):
         self.change_set = changes
         self.message = message
 
-        self.git = Repo(os.path.join(os.path.realpath(root_path), '.git/'))
-        assert not self.git.bare
+        self.repository = Repo(os.path.join(os.path.realpath(root_path), '.git/'))
+        assert not self.repository.bare
         self.author = Actor(name=author, email=author_email)
 
     def commit_change_set(self):
@@ -28,30 +28,30 @@ class GitUtilities(object):
         self._git_commit(self.change_set, self.message)
 
     def _git_commit(self, changes=[], message=''):
-        index = self.git.index
+        index = self.repository.index
         print(yellow("Staging change-set"))
         for change in changes:
-            self.git.git.add(change)
+            self.repository.git.add(change)
             print(yellow("Staged: {}".format(change)))
         print(yellow("Committing files with message: {}".format(message)))
 
         index.commit(message, author=self.author, committer=self.author)
 
     def _git_status(self):
-        return self.git.git.status()
+        return self.repository.git.status()
 
     def _stash_changes(self):
         print(yellow("Stashing changes"))
-        self.git.git.stash('save')
+        self.repository.git.stash('save')
 
     def _pop_changes(self):
         print(yellow("Popping changes"))
-        self.git.git.stash('pop')
+        self.repository.git.stash('pop')
 
     def _checkout_branch(self, branch_name='master'):
         print(yellow("Checking out {}".format(branch_name)))
-        self.git.git.checkout(branch_name)
+        self.repository.git.checkout(branch_name)
 
     def _pull_branch(self):
         print(yellow("Rebasing against branch"))
-        self.git.git.pull('--rebase')
+        self.repository.git.pull('--rebase')
