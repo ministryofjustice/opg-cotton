@@ -31,7 +31,5 @@ class TestGitUtilities(unittest.TestCase):
         result = self.gutil._git_status()
         self.assertNotIn('nothing to commit, working directory clean', result)
 
-    # def test_checkout(self):
-    #     self.gutil._checkout_branch()
 
 

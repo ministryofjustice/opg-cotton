@@ -26,9 +26,6 @@ class GitUtilities(object):
     def _git_status(self):
         return self.git.git.status()
 
-    def _checkout_file(self, file_name=''):
-        self.git.git.checkout(' -- {}'.format(file_name))
-
     def _stash_changes(self):
         self.git.git.stash('save')
 
