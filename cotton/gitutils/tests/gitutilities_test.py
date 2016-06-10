@@ -11,7 +11,7 @@ class TestGitUtilities(unittest.TestCase):
     def test_init(self):
         self.assertEqual([], self.gutil.change_set)
         self.assertEqual('', self.gutil.message)
-        self.assertIsInstance(self.gutil.git, Repo)
+        self.assertIsInstance(self.gutil.repository, Repo)
 
     def test_status(self):
         test_file = 'test-requirements.txt'
