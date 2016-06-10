@@ -180,7 +180,16 @@ We can poll if a highstate is completed now by running a command against the sal
 commit change sets from jenkins
 -------------------------------
 
-In development
+We now have a task to rebase master and commit changes from jenkins jobs, we can override the author to commit the files
+This has to be run from the fabfile location however as the library binds to the hidden .git directory there. Files have to
+be relative to this directory as well
+
+.. code-block:: bash
+    # Commit with defaults for user and email
+    $> ${FAB} commit_build_files:changes='path/to/file1 another/path/file2', message='My commit message'
+
+    # Commit with provided user and email
+    $> ${FAB} commit_build_files:changes='path/to/file1 another/path/file2',message='My commit message',author='my author',author_email='me@domain.tld'
 
 tests
 -----
