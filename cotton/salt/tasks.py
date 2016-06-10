@@ -207,6 +207,13 @@ def highstate(selector="'*'", parse_highstate=False, timeout=60, skip_manage_dow
 
 
 @task
+def commit_build_files(changes=[], message=''):
+    from cotton.gitutils import GitUtilities
+    gutils = GitUtilities(changes=changes, message=message, root_path=os.path.dirname(env.real_fabfile))
+    gutils.commit_change_set()
+
+
+@task
 def shaker():
     """
     utility task to initiate Shaker in the most typical way
