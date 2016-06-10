@@ -177,6 +177,11 @@ We can poll if a highstate is completed now by running a command against the sal
 
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname highstate_complete
 
+commit change sets from jenkins
+-------------------------------
+
+In development
+
 tests
 -----
 
