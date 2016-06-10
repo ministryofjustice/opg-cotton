@@ -1,7 +1,8 @@
 import os
 from git import Repo
-from cotton.colors import yellow
+from cotton.colors import yellow, red
 from git import Actor
+from git.exc import GitCommandError
 
 
 class GitUtilities(object):
@@ -21,11 +22,19 @@ class GitUtilities(object):
         self.author = Actor(name=author, email=author_email)
 
     def commit_change_set(self):
-        self._stash_changes()
-        self._checkout_branch()
-        self._pull_branch()
-        self._pop_changes()
-        self._git_commit(self.change_set, self.message)
+        if "working directory clean" not in self._git_status():
+            try:
+                self._stash_changes()
+                self._checkout_branch()
+                self._pull_branch()
+                self._pop_changes()
+                self._git_commit(self.change_set, self.message)
+            except GitCommandError as e:
+                print(red("Git returned: {}".format(e.stderr)))
+                exit(1)
+
+        else:
+            print(yellow('No changes to commit'))
 
     def _git_commit(self, changes=[], message=''):
         index = self.repository.index
