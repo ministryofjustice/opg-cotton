@@ -34,15 +34,14 @@ def highstate_complete():
     timeout = 15
     from cStringIO import StringIO
     result = StringIO()
-
     salt_run(method='jobs.active', stdout=result)
 
-    if len(result.getvalue().strip()):
+    while len(result.getvalue().strip()):
         print(yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout)))
         time.sleep(timeout)
-        highstate_complete()
-    else:
-        print(green("Highstate complete.\n"))
+        salt_run(method='jobs.active', stdout=result)
+
+    print(green("Highstate complete.\n"))
 
     result.close()
 
