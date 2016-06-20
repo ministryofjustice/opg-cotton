@@ -37,6 +37,7 @@ def highstate_complete():
     salt_run(method='jobs.active', stdout=result)
 
     while len(result.getvalue().strip()):
+        result.truncate(0)
         print(yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout)))
         time.sleep(timeout)
         salt_run(method='jobs.active', stdout=result)
