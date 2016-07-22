@@ -30,7 +30,12 @@ class GitUtilities(object):
         self.author = Actor(name=author, email=author_email)
 
     def commit_change_set(self):
-        if "Changes not staged for commit" in self._git_status():
+
+        files_exist = False
+        for change in self.change_set:
+            files_exist |= change in self._git_status()
+
+        if files_exist:
             try:
                 self._stash_changes()
                 self._checkout_branch()
@@ -73,3 +78,12 @@ class GitUtilities(object):
     def _pull_branch(self):
         print(yellow("Rebasing against branch"))
         self.repository.git.pull('--rebase')
+
+    def _reset_uncommitted_files(self):
+        print(yellow("Resetting uncommitted files"))
+        self.repository.git.checkout('.')
+
+    def _clean_unstaged_files(self):
+        print(yellow("Cleaning up unstaged files"))
+        for untracked_file in self.repository.untracked_files:
+            os.unlink(untracked_file)
