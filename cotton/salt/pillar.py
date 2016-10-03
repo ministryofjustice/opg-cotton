@@ -74,7 +74,7 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
     if parse_top_sls:
         files_to_render = _pillar_from_top_sls(dest_location, jinja_env)
     elif len(pillars):
-        files_to_render = _pillar_from_dirs(pillars)
+        files_to_render, output_dir = _pillar_from_dirs(pillars)
     else:
         print(yellow("No template files where found to render"))
         files_to_render = []
@@ -88,14 +88,20 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
 
 def _pillar_from_dirs(pillars):
     files_to_render = []
+    output_dir = None
     # let's select all files from pillar directory
+
     for pillar in pillars:
         for root, dirs, files in os.walk(pillar):
             rel_path = os.path.relpath(root, pillar)
             for file_name in files:
-                files_to_render.append(os.path.join(rel_path, file_name))
-
-    return files_to_render
+                # if 'retain_dirs' in env and env.retain_dirs:
+                if 'retain_dirs' in env and env.retain_dirs:
+                    output_dir = root.replace('./pillar', '.') if 'pillar' in root else rel_path
+                    files_to_render.append(os.path.join(output_dir, file_name))
+                else:
+                    files_to_render.append(os.path.join(rel_path, file_name))
+    return files_to_render, output_dir
 
 
 def _pillar_from_top_sls(dest_location, jinja_env):
@@ -131,7 +137,13 @@ def _set_template_env(pillars, projects_location):
 
     # We need to merge our directory trees here so that we don't mess with the pillars list
     # if so we may try to connect to something that doesn't actually exist
-    template_dirs = list(pillars)
+    relative_pillars = []
+    for pillar in pillars:
+        if 'pillar/' in pillar:
+            pillar = 'pillar/'
+        relative_pillars.append(pillar)
+
+    template_dirs = list(relative_pillars)
     template_dirs.append(projects_location)
     # String out None or anything empty
     template_dirs = filter(None, template_dirs)
@@ -163,7 +175,7 @@ def __load_pillar_dirs(pillar_dir, projects_location):
 
     if 'pillar_dirs' in env and env.pillar_dirs:
         for root in env.pillar_dirs:
-            pillars.append(os.path.abspath(root))
+            pillars.append(root)
 
     return list(set(pillars))
 

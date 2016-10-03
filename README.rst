@@ -149,7 +149,7 @@ To add multiple pillars for pillar_roots you need to set the :code:`env.pillar_r
 unattended high stating and grain targeting
 --------------------------------------
 
-Cotton now supports targetting on grains or compound queries. To target via a grain you can use the following
+Cotton now supports targeting on grains or compound queries. To target via a grain you can use the following
 
 .. code-block:: bash
 
@@ -167,6 +167,17 @@ Finally you can use a remote_highstate call to now get the system to highstate w
 .. code-block:: bash
 
     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname insecure unattended_highstate
+
+
+salt environments
+-----------------
+
+We now support salt environment handling with a common salt master. To highstate all nodes in an environment you can simply
+specify which environment you want to use as an argument to the highstate method call, this can be combined with compound matching
+to use more finely grained targeting
+
+.. code-block::bash
+     $> ${FAB} -H salt -u ${RSYNC_USER_NAME} target_stackname insecure highstate:salt_enviroment='development'
 
 highstate polling
 -----------------

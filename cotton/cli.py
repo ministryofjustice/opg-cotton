@@ -33,7 +33,7 @@ def parsed_salt_call():
     parser = argparser_parsed_salt()
     args = parser.parse_args()
     smart_salt(None, args=' '.join(args.args), parse_highstate=not args.skip_parse,
-               timeout=args.timeout, skip_manage_down=args.skip_manage_down, prefix=args.prefix)
+               timeout=args.timeout, prefix=args.prefix)
 
 
 def parsed_salt():
@@ -45,4 +45,4 @@ def parsed_salt():
     parser = argparser_parsed_salt(add_selector=True)
     args = parser.parse_args()
     smart_salt(selector=args.selector, args=' '.join(args.args), parse_highstate=not args.skip_parse,
-               timeout=args.timeout, skip_manage_down=args.skip_manage_down, prefix=args.prefix)
+               timeout=args.timeout, prefix=args.prefix)
