@@ -41,56 +41,21 @@ def salt_run(method, args='', pty=False, quiet=False, stdout=None):
     sudo("salt-run {} {}".format(method, args), pty=pty, quiet=quiet, stdout=stdout, combine_stderr=True)
 
 
-def manage_down(skip_manage_down, timeout):
-    """
-    Test to see if we have unresponsive minions, if we do abort all the things
-    :param skip_manage_down: boolean
-    :param timeout: timeout in seconds
-    :return:
-    """
-    if not skip_manage_down:
-        unresponsive = False
-        remote_temp_salt_manage = sudo('mktemp')
-
-        sudo("salt-run manage.down -t {} > {}".format(timeout, remote_temp_salt_manage))
-        sudo("chmod 664 {}".format(remote_temp_salt_manage))
-
-        output_fd_salt_manage = StringIO()
-        get(remote_temp_salt_manage, output_fd_salt_manage)
-        output_salt_manage = output_fd_salt_manage.getvalue()
-
-        print(white("\nUnresponsive minions:", bold=True))
-        if not output_salt_manage:
-            output_salt_manage = "None"
-            color = yellow
-        else:
-            color = red
-            unresponsive = True
-        print(color("\n\t{}".format(output_salt_manage.replace("\n", "\n\t")), bold=True))
-
-        if unresponsive:
-            abort("Unresponsive salt minions")
-
-        # Tidy up if minions all ok
-        sudo('rm {}'.format(remote_temp_salt_manage))
-
-
 def smart_salt(
         selector,
         args,
         parse_highstate=False,
         timeout=60,
-        skip_manage_down=False,
         prefix='',
         salt_environment=None
 ):
     """
     Method to execute salt on a remote device
+
     :param selector: string selector, can be a string, compound or grain match
     :param args: string, arguments to pass to the salt command
     :param parse_highstate: boolean, default false, parse the output of the highstate
     :param timeout: int, timeout in seconds
-    :param skip_manage_down: boolean, default false, check whether all minions are responding
     :param prefix: string, either -C or -G for a compound or grain match
     :param salt_environment:
     """
@@ -99,18 +64,9 @@ def smart_salt(
     else:
         have_saltmaster = False
 
-    if not have_saltmaster:
-        skip_manage_down = True
-
-    if 'skip_manage_down' in env and env.skip_manage_down:
-        skip_manage_down = True
-
     if salt_environment is not None:
         prefix = "-C"
         selector = 'G@opg_stackname:{} and {}'.format(salt_environment, selector)
-
-    if not skip_manage_down:
-        manage_down(skip_manage_down, timeout)
 
     if parse_highstate:
         parsed_summary = []
@@ -123,7 +79,7 @@ def smart_salt(
         # Therefore run a manage.down separately to check for problematic minions
 
         if have_saltmaster:
-            sudo("salt {} '{}' {} --out=yaml -t {} > {}".format(prefix, selector, args, timeout, remote_temp_salt))
+            sudo("salt {} {} {} --out=yaml -t {} > {}".format(prefix, selector, args, timeout, remote_temp_salt))
         else:
             sudo("salt-call {} {} --out=yaml > {}".format(args, remote_temp_salt))
 

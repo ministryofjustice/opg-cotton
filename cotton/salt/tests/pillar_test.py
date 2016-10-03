@@ -1,4 +1,5 @@
-import unittest, os
+import unittest
+import os
 from fabric.api import env
 from cotton.salt import pillar
 
@@ -53,11 +54,6 @@ class TestPillarMethods(unittest.TestCase):
 
         expected_message = 'Missing top.sls in pillar location. Skipping rendering.'
         self.assertEqual(str(context.exception), expected_message)
-
-    # def test_get_rendered_pillar_location_renders_pillar(self):
-    #     env.use_project_dir = True
-    #     result = pillar.get_rendered_pillar_location(parse_top_sls=False)
-    #     self.assertNotEqual(result.find('/tmp/tmp'), -1)
 
     def test_get_rendered_pillar_location_with_no_config_dirs(self):
         env.use_project_dir = False

@@ -4,7 +4,8 @@ import random
 import string
 from cotton.gitutils import GitUtilities
 from git import Repo
-
+import sys
+from StringIO import StringIO
 
 class TestGitUtilities(unittest.TestCase):
 
@@ -20,46 +21,61 @@ class TestGitUtilities(unittest.TestCase):
         self.assertIsInstance(self.gutil.repository, Repo)
 
     def test_status(self):
-        test_file = 'test-requirements.txt'
-        result = self.gutil._git_status()
-        self.assertIn('nothing to commit, working directory clean', result)
-        local_file = open(test_file, 'w')
-        local_file.write('Test data')
-        local_file.close()
-        result = self.gutil._git_status()
-        self.assertNotIn('nothing to commit, working directory clean', result)
+        stdout = sys.stdout
 
-        self.gutil._stash_changes()
-        result = self.gutil._git_status()
-        self.assertIn('nothing to commit, working directory clean', result)
+        try:
+            new_stdout = StringIO()
+            sys.stdout = new_stdout
 
-        self.gutil._pop_changes()
-        result = self.gutil._git_status()
-        self.assertNotIn('nothing to commit, working directory clean', result)
+            test_file = 'test-requirements.txt'
+            result = self.gutil._git_status()
+            self.assertIn('nothing to commit, working directory clean', result)
+            local_file = open(test_file, 'w')
+            local_file.write('Test data')
+            local_file.close()
+            result = self.gutil._git_status()
+            self.assertNotIn('nothing to commit, working directory clean', result)
 
-        self.gutil._reset_uncommitted_files()
-        result = self.gutil._git_status()
-        self.assertIn('nothing to commit, working directory clean', result)
+            self.gutil._stash_changes()
+            result = self.gutil._git_status()
+            self.assertIn('nothing to commit, working directory clean', result)
+
+            self.gutil._pop_changes()
+            result = self.gutil._git_status()
+            self.assertNotIn('nothing to commit, working directory clean', result)
+
+            self.gutil._reset_uncommitted_files()
+            result = self.gutil._git_status()
+            self.assertIn('nothing to commit, working directory clean', result)
+        finally:
+            sys.stdout = stdout
 
     def test_new_file_found_for_staging(self):
-        result = self.gutil._git_status()
-        self.assertIn('nothing to commit, working directory clean', result)
+        stdout = sys.stdout
 
-        change_set = self.gutil.change_set
-        new_file = self.random_filename()
+        try:
+            new_stdout = StringIO()
+            sys.stdout = new_stdout
+            result = self.gutil._git_status()
+            self.assertIn('nothing to commit, working directory clean', result)
 
-        self.gutil.change_set = [new_file]
-        os.mknod(new_file)
-        self.assertNotIn('nothing to commit, working directory clean', self.gutil._git_status())
+            change_set = self.gutil.change_set
+            new_file = self.random_filename()
 
-        self.gutil._clean_unstaged_files()
-        self.assertIn('nothing to commit, working directory clean', self.gutil._git_status())
+            self.gutil.change_set = [new_file]
+            os.mknod(new_file)
+            self.assertNotIn('nothing to commit, working directory clean', self.gutil._git_status())
 
-        new_dirname = self.random_filename(size=10)
-        os.mkdir(new_dirname)
-        os.mknod('{}/{}'.format(new_dirname, new_file))
-        self.assertNotIn('nothing to commit, working directory clean', self.gutil._git_status())
+            self.gutil._clean_unstaged_files()
+            self.assertIn('nothing to commit, working directory clean', self.gutil._git_status())
 
-        self.gutil._clean_unstaged_files()
-        self.assertIn('nothing to commit, working directory clean', self.gutil._git_status())
-        self.gutil.change_set = change_set
+            new_dirname = self.random_filename(size=10)
+            os.mkdir(new_dirname)
+            os.mknod('{}/{}'.format(new_dirname, new_file))
+            self.assertNotIn('nothing to commit, working directory clean', self.gutil._git_status())
+
+            self.gutil._clean_unstaged_files()
+            self.assertIn('nothing to commit, working directory clean', self.gutil._git_status())
+            self.gutil.change_set = change_set
+        finally:
+            sys.stdout = stdout
