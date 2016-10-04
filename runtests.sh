@@ -12,7 +12,7 @@ fi
 
 # update setup tools to a later version
 pip install -U pip wheel setuptools
-pip install -r requirements.txt
-pip install -r test-requirements.txt
+pip install --upgrade -r requirements.txt
+pip install --upgrade -r test-requirements.txt
 
 make test

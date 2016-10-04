@@ -1,10 +1,12 @@
-from fabric.api import env, lcd, local
+from fabric.api import env
 from cotton.colors import yellow
-import yaml
+from cotton.api import configure_fabric_for_host
+from ast import literal_eval
 import os
 
 
 def build_salt_dirs():
+    import yaml
     """
     get list of pillar directories for cotton
     :return: dict with list of dirs or error
@@ -35,18 +37,54 @@ def build_salt_dirs():
         return {'error': 'Failed to open sources.yml'}
 
 
-
-
-def run_ansible_playbook():
+def common_configurations(salt_master=True, pillar_dirs=None, pillar_roots=None):
     """
-    Run site.yml playbook to checkout provision infrastructure.
+    Common env configurations
+    :param pillar_roots: list of pillar root source directories
+    :param new_master: only set to True if master is being rebuilt
+    :param salt_master: Master or masterless salt, defaults to True(has a master)
+    :param pillar_dirs: a ; separated list of directories to merge based on your top.sls
     :return:
     """
-    if len(env.get('playbook_version', '')) < 1:
-        env.playbook_version = 'master'
-    # add extra vars to this string
-    extra_vars = 'target={} opg_ansible_version={}'.format(env.stackname, env.playbook_version)
+    env.project = 'pillar/{stackname}'.format(stackname=env.stackname)  # that's where pillars are taken from
+    env.saltmaster = salt_master
+    env.retain_dirs = True
 
-    with lcd('ansible'):
-        # run provisioning playbook
-        local('ansible-playbook -i hosts site.yml -e "' + extra_vars + '"')
+    if env.new_master:
+        env.gateway_user = 'jenkins-agent'
+
+    env.private_dns = configure_fabric_for_host(name='master.{}'.format(env.stackname))
+
+    if "gateway" not in env:
+        env.gateway = 'jump.{stackname}.{domainname}'.format(stackname=env.stackname, domainname=env.domainname)
+
+    print("Pipeline: {stackname}.{domainname}".format(stackname=env.stackname, domainname=env.domainname))
+    salt_dirs = build_salt_dirs()
+    if isinstance(salt_dirs, dict):
+        if 'error' in salt_dirs:
+            print("Error parsing directories:\n{}".format(salt_dirs['error']))
+        else:
+            if pillar_dirs is None:
+                env.pillar_dirs = salt_dirs['pillar_dir']
+
+            if pillar_roots is None:
+                env.pillar_roots = salt_dirs['pillar_root']
+
+            if len(salt_dirs['missing']) > 0:
+                print("Missing directories: \n{}".format(salt_dirs['missing']))
+
+
+def configure_master_host(new_master=False):
+    """
+    Configures our master
+    :param new_master:
+    :return:
+    """
+    if new_master:
+        env.new_master = literal_eval(new_master)
+    else:
+        env.new_master = new_master
+    if env.target_host == 'localhost':
+        env.vm_name = '127.0.0.1'
+    else:
+        common_configurations()
