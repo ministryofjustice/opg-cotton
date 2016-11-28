@@ -1,5 +1,7 @@
 from ansibleutils import AnsibleUtilities
+from featurebranch import FeatureBranch
 from fabric.api import task
+from cotton.colors import red
 
 
 @task
@@ -25,3 +27,22 @@ def run_ansible_playbook(
         playbooks_version=playbooks_version
     )
 
+
+@task
+def create_feature_stack(
+        target_stackname,
+        source_stackname,
+        lifetime_days
+):
+    feature_branch = FeatureBranch()
+    try:
+        feature_branch.create_feature_stack(
+            target_stackname=target_stackname,
+            source_stackname=source_stackname,
+            lifetime_days=lifetime_days
+
+        )
+
+        feature_branch.commit_feature_stack(target_stackname)
+    except:
+        print(red('Failed to create {} aborting'.format(target_stackname)))
