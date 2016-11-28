@@ -137,8 +137,7 @@ class FeatureBranch(object):
         with open(target_path + '/stack_expiry.sls', 'w+') as stream:
             yaml.safe_dump(file_data, stream=stream, default_flow_style=False)
 
-    @staticmethod
-    def commit_feature_stack(target_stackname):
+    def commit_feature_stack(self, target_branch='master'):
         """
         Add the stack to git
         :return:
@@ -146,11 +145,12 @@ class FeatureBranch(object):
         from cotton.gitutils import gitutilities
         utils = gitutilities.GitUtilities(
             changes=[
-                'ansible/{}'.format(target_stackname),
-                'pillar/{}'.format(target_stackname),
+                'ansible/{}'.format(self.target_stackname),
+                'pillar/{}'.format(self.target_stackname),
                 'sources.yml'
             ],
-            message='Creation of {} feature stack'.format(target_stackname)
+            message='Creation of {} feature stack'.format(self.target_stackname),
+            target_branch=target_branch
         )
 
         utils.commit_change_set()

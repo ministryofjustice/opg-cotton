@@ -44,6 +44,6 @@ def create_feature_stack(
         sources_section=sources_section
     )
 
-    feature_branch.commit_feature_stack(target_stackname)
+    feature_branch.commit_feature_stack()
     # except :
     #     print(red('Failed to create {} aborting'.format(target_stackname)))
