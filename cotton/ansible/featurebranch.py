@@ -34,20 +34,20 @@ class FeatureBranch(object):
             )
         )
 
-        if not path.exists('ansible/{}'.format(target_stackname)):
+        if not path.exists('ansible/{}'.format(self.target_stackname)):
 
             # Copy ansible feature to new stack
-            print(green('Creating ansible/{}'.format(target_stackname)))
+            print(green('Creating ansible/{}'.format(self.target_stackname)))
             shutil.copytree(
                 src='ansible/{}'.format(source_stackname),
-                dst='ansible/{}'.format(target_stackname)
+                dst='ansible/{}'.format(self.target_stackname)
             )
 
             # Copy pillar to new stack
-            print(green('Creating pillar/{}'.format(target_stackname)))
+            print(green('Creating pillar/{}'.format(self.target_stackname)))
             shutil.copytree(
                 src='pillar/{}'.format(source_stackname),
-                dst='pillar/{}'.format(target_stackname)
+                dst='pillar/{}'.format(self.target_stackname)
             )
 
             # update top.sls in new stack
