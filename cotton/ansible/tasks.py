@@ -31,6 +31,7 @@ def run_ansible_playbook(
 @task
 def create_feature_stack(
         target_stackname,
+        sources_section,
         source_stackname='aws-develop',
         lifetime_days=5
 ):
@@ -39,8 +40,8 @@ def create_feature_stack(
     feature_branch.create_feature_stack(
         target_stackname=target_stackname,
         source_stackname=source_stackname,
-        lifetime_days=lifetime_days
-
+        lifetime_days=lifetime_days,
+        sources_section=sources_section
     )
 
     feature_branch.commit_feature_stack(target_stackname)
