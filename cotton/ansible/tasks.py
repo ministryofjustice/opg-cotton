@@ -31,18 +31,18 @@ def run_ansible_playbook(
 @task
 def create_feature_stack(
         target_stackname,
-        source_stackname,
-        lifetime_days
+        source_stackname='aws-develop',
+        lifetime_days=5
 ):
     feature_branch = FeatureBranch()
-    try:
-        feature_branch.create_feature_stack(
-            target_stackname=target_stackname,
-            source_stackname=source_stackname,
-            lifetime_days=lifetime_days
+    # try:
+    feature_branch.create_feature_stack(
+        target_stackname=target_stackname,
+        source_stackname=source_stackname,
+        lifetime_days=lifetime_days
 
-        )
+    )
 
-        feature_branch.commit_feature_stack(target_stackname)
-    except:
-        print(red('Failed to create {} aborting'.format(target_stackname)))
+    feature_branch.commit_feature_stack(target_stackname)
+    # except :
+    #     print(red('Failed to create {} aborting'.format(target_stackname)))
