@@ -33,7 +33,8 @@ def create_feature_stack(
         target_stackname,
         sources_section,
         source_stackname='aws-develop',
-        lifetime_days=5
+        lifetime_days=5,
+        target_branch='master'
 ):
     feature_branch = FeatureBranch()
     # try:
@@ -44,6 +45,6 @@ def create_feature_stack(
         sources_section=sources_section
     )
 
-    feature_branch.commit_feature_stack()
+    feature_branch.commit_feature_stack(target_branch=target_branch)
     # except :
     #     print(red('Failed to create {} aborting'.format(target_stackname)))
