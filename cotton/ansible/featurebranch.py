@@ -17,6 +17,7 @@ class FeatureBranch(object):
         """
         Remove a target stack completely
         :param target_stackname:
+        :param sources_section:
         :return:
         """
 
