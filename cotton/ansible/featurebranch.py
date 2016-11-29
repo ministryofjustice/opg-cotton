@@ -9,6 +9,37 @@ class FeatureBranch(object):
 
     target_stackname = ''
 
+    def remove_feature_stack(
+            self,
+            target_stackname,
+            sources_section
+    ):
+        """
+        Remove a target stack completely
+        :param target_stackname:
+        :return:
+        """
+
+        target_stackname = self.__generate_stack_name(target_stackname)
+        print(
+            yellow(
+                "Deleting stack {}".format(target_stackname)
+            )
+        )
+
+        if path.exists('ansible/{}'.format(target_stackname)) and path.exists('pillar/{}'.format(target_stackname)):
+
+            shutil.rmtree('ansible/{}'.format(target_stackname))
+            shutil.rmtree('pillar/{}'.format(target_stackname))
+
+            # add new feature branch to truth file
+            self.__remove_feature_from_sources_file(
+                'pillar/{}'.format(target_stackname),
+                sources_section
+            )
+        else:
+            print(yellow("Feature stack does not exist"))
+
     def create_feature_stack(
             self,
             target_stackname,
@@ -51,7 +82,7 @@ class FeatureBranch(object):
             )
 
             # update top.sls in new stack
-            print(green('Updating pillar references'))
+            print(yellow('Updating pillar references'))
             self._update_top_sls(
                 "pillar/{}/top.sls".format(self.target_stackname),
                 source_stackname
@@ -97,6 +128,25 @@ class FeatureBranch(object):
             source = yaml.safe_load(stream)
 
         source['pillar'][sources_section].append('./{}'.format(feature_pillar))
+
+        with open('sources.yml', 'w+') as stream:
+            yaml.safe_dump(
+                data=source,
+                stream=stream,
+                default_flow_style=False
+            )
+
+    @staticmethod
+    def __remove_feature_from_sources_file(feature_pillar, sources_section):
+        """
+        Removes our feature stack from the truth file
+        :param feature_pillar:
+        :param sources_section:
+        """
+        with open('sources.yml', 'r') as stream:
+            source = yaml.safe_load(stream)
+
+        source['pillar'][sources_section].remove('./{}'.format(feature_pillar))
 
         with open('sources.yml', 'w+') as stream:
             yaml.safe_dump(

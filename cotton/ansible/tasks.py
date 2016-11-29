@@ -36,8 +36,15 @@ def create_feature_stack(
         lifetime_days=5,
         target_branch='master'
 ):
+    """
+    Create and commit an new ansible based stack for feature branch development and testing
+    :param target_stackname:
+    :param sources_section:
+    :param source_stackname:
+    :param lifetime_days:
+    :param target_branch:
+    """
     feature_branch = FeatureBranch()
-    # try:
     feature_branch.create_feature_stack(
         target_stackname=target_stackname,
         source_stackname=source_stackname,
@@ -46,5 +53,25 @@ def create_feature_stack(
     )
 
     feature_branch.commit_feature_stack(target_branch=target_branch)
-    # except :
-    #     print(red('Failed to create {} aborting'.format(target_stackname)))
+
+
+@task
+def delete_feature_stack(
+        target_stackname,
+        sources_section,
+        target_branch='master'
+):
+    """
+    Remove and commit an unneeded created feature stack
+    :param target_stackname:
+    :param sources_section:
+    :param target_branch:
+    :return:
+    """
+    feature_branch = FeatureBranch()
+    feature_branch.remove_feature_stack(
+        target_stackname=target_stackname,
+        sources_section=sources_section
+    )
+
+    feature_branch.commit_feature_stack(target_branch=target_branch)
