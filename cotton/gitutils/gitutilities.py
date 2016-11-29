@@ -41,14 +41,21 @@ class GitUtilities(object):
                 self._checkout_branch()
                 self._pull_branch()
                 self._pop_changes()
+                self._remove_deleted_files()
                 self._git_commit(self.change_set, self.message)
             except GitCommandError as e:
                 if e.stderr != 'No stash found.':
                     print(red("Git returned: {}".format(e.stderr)))
                     exit(e.status)
-
         else:
             print(yellow('No changes to commit'))
+
+    def _remove_deleted_files(self):
+        index = self.repository.index
+        print(yellow("Removing deleted files from repository"))
+
+        items = self.repository.git.ls_files('-d').split('\n')
+        index.remove(items=items, working_tree=True, r=True)
 
     def _git_commit(self, changes=[], message=''):
         index = self.repository.index

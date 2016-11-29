@@ -155,6 +155,7 @@ class FeatureBranch(object):
 
         utils.commit_change_set()
 
+
     @staticmethod
     def remove_feature_stack(target_stackname):
         import shutil
