@@ -12,7 +12,7 @@ class FeatureBranch(object):
     def remove_feature_stack(
             self,
             target_stackname,
-            sources_section
+            sources_section=''
     ):
         """
         Remove a target stack completely
