@@ -205,17 +205,3 @@ class FeatureBranch(object):
         )
 
         utils.commit_change_set()
-
-
-    @staticmethod
-    def remove_feature_stack(target_stackname):
-        import shutil
-
-        if 'feature' not in target_stackname:
-            target_stackname = '{}-feature'.format(target_stackname)
-
-        # Remove ansible feature stack
-        shutil.rmtree(path='ansible/{}'.format(target_stackname), ignore_errors=True)
-        # Remove pillar
-        shutil.rmtree(path='pillar/{}'.format(target_stackname), ignore_errors=True)
-        # Remove stack from truth file
