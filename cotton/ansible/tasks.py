@@ -74,4 +74,4 @@ def delete_feature_stack(
         sources_section=sources_section
     )
 
-    feature_branch.commit_feature_stack(target_branch=target_branch)
+    feature_branch.commit_feature_stack(target_branch=target_branch, action='Removal')

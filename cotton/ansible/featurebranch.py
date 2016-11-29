@@ -187,7 +187,7 @@ class FeatureBranch(object):
         with open(target_path + '/stack_expiry.sls', 'w+') as stream:
             yaml.safe_dump(file_data, stream=stream, default_flow_style=False)
 
-    def commit_feature_stack(self, target_branch='master'):
+    def commit_feature_stack(self, target_branch='master', action='Creation'):
         """
         Add the stack to git
         :return:
@@ -199,7 +199,7 @@ class FeatureBranch(object):
                 'pillar/{}'.format(self.target_stackname),
                 'sources.yml'
             ],
-            message='Creation of {} feature stack'.format(self.target_stackname),
+            message='{} of {} feature stack'.format(action, self.target_stackname),
             target_branch=target_branch
         )
 
