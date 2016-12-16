@@ -1,5 +1,5 @@
 from ansibleutils import AnsibleUtilities
-from featurebranch import FeatureBranch
+from developmentstack import DevelopmentStack
 from fabric.api import task
 from cotton.colors import red
 
@@ -44,15 +44,15 @@ def create_feature_stack(
     :param lifetime_days:
     :param target_branch:
     """
-    feature_branch = FeatureBranch()
-    feature_branch.create_feature_stack(
+    feature_branch = DevelopmentStack()
+    feature_branch.create_development_stack(
         target_stackname=target_stackname,
         source_stackname=source_stackname,
         lifetime_days=lifetime_days,
         sources_section=sources_section
     )
 
-    feature_branch.commit_feature_stack(target_branch=target_branch)
+    feature_branch.commit_development_stack(target_branch=target_branch)
 
 
 @task
@@ -68,10 +68,10 @@ def delete_feature_stack(
     :param target_branch:
     :return:
     """
-    feature_branch = FeatureBranch()
-    feature_branch.remove_feature_stack(
+    feature_branch = DevelopmentStack()
+    feature_branch.remove_development_stack(
         target_stackname=target_stackname,
         sources_section=sources_section
     )
 
-    feature_branch.commit_feature_stack(target_branch=target_branch, action='Removal')
+    feature_branch.commit_development_stack(target_branch=target_branch, action='Removal')

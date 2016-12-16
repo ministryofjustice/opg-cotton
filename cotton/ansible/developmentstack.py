@@ -5,17 +5,28 @@ import yaml
 from datetime import datetime, timedelta
 
 
-class FeatureBranch(object):
+class TargetViolationError(Exception):
+    """
+    Custom exception
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+class DevelopmentStack(object):
 
     target_stackname = ''
 
-    def remove_feature_stack(
+    def remove_development_stack(
             self,
             target_stackname,
             sources_section=''
     ):
         """
-        Remove a target stack completely
+        Remove a target development stack completely
         :param target_stackname:
         :param sources_section:
         :return:
@@ -24,24 +35,25 @@ class FeatureBranch(object):
         target_stackname = self.__generate_stack_name(target_stackname)
         print(
             yellow(
-                "Deleting stack {}".format(target_stackname)
+                "Deleting development stack {}".format(target_stackname)
             )
         )
 
-        if path.exists('ansible/{}'.format(target_stackname)) and path.exists('pillar/{}'.format(target_stackname)):
+        if path.exists('ansible/{}'.format(target_stackname)) and \
+                path.exists('pillar/{}'.format(target_stackname)):
 
             shutil.rmtree('ansible/{}'.format(target_stackname))
             shutil.rmtree('pillar/{}'.format(target_stackname))
 
-            # add new feature branch to truth file
-            self.__remove_feature_from_sources_file(
+            # add new development stack to the truth file
+            self.__remove_stack_from_sources_file(
                 'pillar/{}'.format(target_stackname),
                 sources_section
             )
         else:
             print(yellow("Feature stack does not exist"))
 
-    def create_feature_stack(
+    def create_development_stack(
             self,
             target_stackname,
             source_stackname='aws-develop',
@@ -50,16 +62,22 @@ class FeatureBranch(object):
     ):
         """
         Creates a target stack based on the aws-develop stack
-        :param target_stackname:
-        :param source_stackname:
+        :param target_stackname: string
+        :param source_stackname: string
+        :param sources_section: string target for non production environment
         :param lifetime_days:
         :return:
         """
         self.target_stackname = self.__generate_stack_name(target_stackname)
 
+        if 'prod' in sources_section or 'production' in sources_section:
+            raise TargetViolationError('This feature is for development purposes and supports only'
+                                       ' non production targets')
+
         print(
             yellow(
-                "Creating feature environment {} from {}".format(
+                "Creating {} environment {} from {}".format(
+                    sources_section,
                     self.target_stackname,
                     source_stackname
                 )
@@ -101,7 +119,7 @@ class FeatureBranch(object):
                 sources_section
             )
         else:
-            print(yellow("Feature stack already exists"))
+            print(yellow("Development stack already exists"))
 
     @staticmethod
     def __generate_stack_name(target_stackname):
@@ -138,7 +156,7 @@ class FeatureBranch(object):
             )
 
     @staticmethod
-    def __remove_feature_from_sources_file(feature_pillar, sources_section):
+    def __remove_stack_from_sources_file(feature_pillar, sources_section):
         """
         Removes our feature stack from the truth file
         :param feature_pillar:
@@ -188,7 +206,7 @@ class FeatureBranch(object):
         with open(target_path + '/stack_expiry.sls', 'w+') as stream:
             yaml.safe_dump(file_data, stream=stream, default_flow_style=False)
 
-    def commit_feature_stack(self, target_branch='master', action='Creation'):
+    def commit_development_stack(self, target_branch='master', action='Creation'):
         """
         Add the stack to git
         :return:
@@ -200,7 +218,7 @@ class FeatureBranch(object):
                 'pillar/{}'.format(self.target_stackname),
                 'sources.yml'
             ],
-            message='{} of {} feature stack'.format(action, self.target_stackname),
+            message='{} of {} development stack'.format(action, self.target_stackname),
             target_branch=target_branch
         )
 
