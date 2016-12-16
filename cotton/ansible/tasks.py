@@ -1,5 +1,5 @@
 from ansibleutils import AnsibleUtilities
-from developmentstack import DevelopmentStack
+from developmentstack import DevelopmentStack, TargetViolationError
 from fabric.api import task
 from cotton.colors import red
 
@@ -45,12 +45,18 @@ def create_feature_stack(
     :param target_branch:
     """
     feature_branch = DevelopmentStack()
-    feature_branch.create_development_stack(
-        target_stackname=target_stackname,
-        source_stackname=source_stackname,
-        lifetime_days=lifetime_days,
-        sources_section=sources_section
-    )
+
+    try:
+        feature_branch.create_development_stack(
+            target_stackname=target_stackname,
+            source_stackname=source_stackname,
+            lifetime_days=lifetime_days,
+            sources_section=sources_section
+        )
+    except TargetViolationError as e:
+        print(red(e.message))
+    finally:
+        exit(1)
 
     feature_branch.commit_development_stack(target_branch=target_branch)
 
