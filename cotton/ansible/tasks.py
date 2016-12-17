@@ -55,7 +55,6 @@ def create_feature_stack(
         )
     except TargetViolationError as e:
         print(red(e.message))
-    finally:
         exit(1)
 
     feature_branch.commit_development_stack(target_branch=target_branch)
