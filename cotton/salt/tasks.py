@@ -207,8 +207,8 @@ def __update_master_config(keys):
         master_config['pillar_roots'] = new_pillar_roots
         # refresh = True
         restart = True
-    else:
-        refresh = True
+    # else:
+    #     refresh = True
 
     if restart:
         try:
