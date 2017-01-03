@@ -11,7 +11,6 @@ from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt
 from yaml import safe_load, safe_dump
 from cStringIO import StringIO
 
-
 @vm_task
 def salt(
         selector="'*'",
@@ -214,18 +213,18 @@ def __update_master_config(keys):
     if restart:
         try:
             d = tempfile.mkdtemp()
-            f = open(d + '/master.auto','w')
+            f = open(d + '/master.auto', 'w')
             f.write(safe_dump(master_config, default_flow_style=False))
             f.close()
             put(f.name, 'master.auto')
             local('rm -rf ' + d)
             sudo('mv  -v master.auto /etc/salt/master', stdout=master_data)
-            print "{}".format(master_data.getvalue())
+            print("{}".format(master_data.getvalue()))
 
             restart_service('salt-master')
             time.sleep(30)
-        except Exception, e:
-            print str(e) #TODO handle this error
+        except Exception as e:
+            print (str(e))  # TODO handle this error
             pass
     elif refresh:
         print('salt needs to have the pillar cache rebuilt')
@@ -373,7 +372,12 @@ def shaker_freeze():
     """
     utility task to check current versions
     """
-    local('for d in vendor/formula-repos/*; do echo -n "$d "; git --git-dir=$d/.git describe --tags 2>/dev/null || git --git-dir=$d/.git rev-parse --short HEAD; done', shell='/bin/bash')
+    local(
+        'for d in vendor/formula-repos/*; '
+        'do echo -n "$d "; '
+        'git --git-dir=$d/.git describe --tags 2>/dev/null || git --git-dir=$d/.git rev-parse --short HEAD; done',
+        shell='/bin/bash'
+    )
 
 
 @task
@@ -381,5 +385,32 @@ def shaker_check():
     """
     utility task to check if there are no new versions available
     """
-    local('for d in vendor/formula-repos/*; do (export GIT_DIR=$d/.git; git fetch --tags -q 2>/dev/null; echo -n "$d: "; latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1 2>/dev/null) 2>/dev/null || echo "no tags"); current=$(git describe --tags 2>/dev/null || echo "no tags"); echo "\tlatest: $latest_tag  current: $current"); done', shell='/bin/bash')
+    local(
+        'for d in vendor/formula-repos/*; '
+        'do (export GIT_DIR=$d/.git; git fetch --tags -q 2>/dev/null; '
+        'echo -n "$d: "; '
+        'latest_tag=$(git describe --tags '
+        '$(git rev-list --tags --max-count=1 2>/dev/null) 2>/dev/null || echo "no tags"); '
+        'current=$(git describe --tags 2>/dev/null || echo "no tags"); '
+        'echo "\tlatest: $latest_tag  current: $current"); done',
+        shell='/bin/bash'
+    )
+
+
+@vm_task
+def healthcheck():
+    salt(args='test.ping')
+    salt(args='cmd.run "docker ps"')
+    salt(args='cmd.run "df -hl && echo && btrfs filesystem show"')
+
+
+@task
+def workon_short(workon_short):
+    from cotton.api import workon
+    env.vm_name = '{workon_short}.{stackname}.{domainname}'.format(
+        workon_short=workon_short,
+        stackname=env.stackname,
+        domainname=env.domainname
+    )
+    workon(env.vm_name)
 
