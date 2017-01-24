@@ -33,6 +33,8 @@ class DevelopmentStack(object):
         """
 
         target_stackname = self.__generate_stack_name(target_stackname)
+        self.is_protected_stack()
+
         print(
             yellow(
                 "Deleting development stack {}".format(target_stackname)
@@ -223,3 +225,10 @@ class DevelopmentStack(object):
         )
 
         utils.commit_change_set()
+
+    def is_protected_stack(self):
+        """Validate the stack is not protected, if it is raise a TargetViolationError"""
+        protected_stacks = ['aws-develop', 'staging', 'production']
+
+        if self.target_stackname in protected_stacks:
+            raise TargetViolationError("Target stack is protected")
