@@ -16,7 +16,9 @@ class AnsibleUtilities(object):
         Runs an ansible playbook
         :param roles_version:
         :param destroy_stack:
+        :param playbooks_version:
         :param playbook_name:
+        :param playbook_path:
         :return:
         """
         # add extra vars to this string
