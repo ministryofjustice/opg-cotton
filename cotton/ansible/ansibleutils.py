@@ -34,8 +34,8 @@ class AnsibleUtilities(object):
             playbook_cmd = 'ansible-playbook -i hosts '
             cmd_suffix = ' -e "{}" -v'.format(extra_vars)
             if playbook_name is None:
-                provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
-            else:
                 provision_cmd = 'provision.yml '
+            else:
+                provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
 
             local("{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix))

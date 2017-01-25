@@ -4,7 +4,7 @@ from fabric.api import task
 
 @task
 def run_ansible_playbook(
-        playbook_name,
+        playbook_name=None,
         playbooks_version='master',
         playbook_path='opg-playbooks',
         roles_version='master',
