@@ -6,8 +6,8 @@ class AnsibleUtilities(object):
 
     @staticmethod
     def run_ansible_playbook(
-            playbook_path,
-            playbook_name,
+            playbook_path=None,
+            playbook_name=None,
             roles_version='master',
             playbooks_version='master',
             destroy_stack=False
@@ -31,5 +31,13 @@ class AnsibleUtilities(object):
             # checkout roles from opg-ansible-roles repo
             local('ansible-playbook -i hosts site.yml -e "' + extra_vars + '"')
             # run provisioning playbook
-            playbook_cmd = 'ansible-playbook -i hosts {}/{}.yml -e "{}" -v'.format(playbook_path, playbook_name, extra_vars)
+            playbook_cmd = 'ansible-playbook -i hosts '
+            cmd_suffix = ' -e "{}" -v'.format(extra_vars)
+            if playbook_name is None:
+                provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
+            else:
+                provision_cmd = 'provision.yml '
+
+            playbook_cmd = "{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix)
+
             local(playbook_cmd)
