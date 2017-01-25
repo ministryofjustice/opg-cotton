@@ -38,6 +38,4 @@ class AnsibleUtilities(object):
             else:
                 provision_cmd = 'provision.yml '
 
-            playbook_cmd = "{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix)
-
-            local(playbook_cmd)
+            local("{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix))
