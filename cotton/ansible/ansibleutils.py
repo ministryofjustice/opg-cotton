@@ -5,15 +5,28 @@ from ast import literal_eval
 class AnsibleUtilities(object):
 
     @staticmethod
-    def run_ansible_playbook(roles_version='master', destroy_stack=False):
+    def run_ansible_playbook(
+            playbook_path=None,
+            playbook_name=None,
+            roles_version='master',
+            playbooks_version='master',
+            destroy_stack=False
+    ):
         """
         Runs an ansible playbook
         :param roles_version:
         :param destroy_stack:
+        :param playbooks_version:
+        :param playbook_name:
+        :param playbook_path:
         :return:
         """
         # add extra vars to this string
-        extra_vars = 'target={} opg_ansible_version={}'.format(env.stackname, roles_version)
+        extra_vars = 'target={} opg_ansible_version={} opg_playbooks_version={}'.format(
+            env.stackname,
+            roles_version,
+            playbooks_version
+        )
         if isinstance(destroy_stack, basestring):
             destroy_stack = literal_eval("{}".format(destroy_stack).lower().capitalize())
         if destroy_stack:
@@ -22,4 +35,10 @@ class AnsibleUtilities(object):
             # checkout roles from opg-ansible-roles repo
             local('ansible-playbook -i hosts site.yml -e "' + extra_vars + '"')
             # run provisioning playbook
-            local('ansible-playbook -i hosts provision.yml -e "' + extra_vars + '" -v')
+            playbook_cmd = 'ansible-playbook -i hosts '
+            cmd_suffix = ' -e "{}" -v'.format(extra_vars)
+            provision_cmd = 'provision.yml '
+            if playbook_name is not None:
+                provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
+
+            local("{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix))
