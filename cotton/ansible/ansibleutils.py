@@ -22,7 +22,11 @@ class AnsibleUtilities(object):
         :return:
         """
         # add extra vars to this string
-        extra_vars = 'target={} opg_ansible_version={} opg_playbooks_version={}'.format(env.stackname, roles_version, playbooks_version)
+        extra_vars = 'target={} opg_ansible_version={} opg_playbooks_version={}'.format(
+            env.stackname,
+            roles_version,
+            playbooks_version
+        )
         if isinstance(destroy_stack, basestring):
             destroy_stack = literal_eval("{}".format(destroy_stack).lower().capitalize())
         if destroy_stack:
@@ -33,9 +37,8 @@ class AnsibleUtilities(object):
             # run provisioning playbook
             playbook_cmd = 'ansible-playbook -i hosts '
             cmd_suffix = ' -e "{}" -v'.format(extra_vars)
-            if playbook_name is None:
-                provision_cmd = 'provision.yml '
-            else:
+            provision_cmd = 'provision.yml '
+            if playbook_name is not None:
                 provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
 
             local("{} {} {}".format(playbook_cmd, provision_cmd, cmd_suffix))
