@@ -9,7 +9,7 @@ def run_ansible_playbook(
         playbook_path='opg-playbooks',
         roles_version='master',
         destroy_stack=False,
-        debug='v'
+        debug=False
 ):
     """
     :param playbook_name:

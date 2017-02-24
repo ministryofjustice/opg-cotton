@@ -11,7 +11,7 @@ class AnsibleUtilities(object):
             roles_version='master',
             playbooks_version='master',
             destroy_stack=False,
-            debug='v'
+            debug=False
     ):
         """
         Runs an ansible playbook
@@ -38,7 +38,7 @@ class AnsibleUtilities(object):
             local('ansible-playbook -i hosts site.yml -e "' + extra_vars + '"')
             # run provisioning playbook
             playbook_cmd = 'ansible-playbook -i hosts '
-            cmd_suffix = ' -e "{}" -{}'.format(extra_vars, debug)
+            cmd_suffix = ' -e "{}" -{}'.format(extra_vars, 'vvvv' if debug else 'v')
             provision_cmd = 'provision.yml '
             if playbook_name is not None:
                 provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
