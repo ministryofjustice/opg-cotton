@@ -10,7 +10,8 @@ class AnsibleUtilities(object):
             playbook_name=None,
             roles_version='master',
             playbooks_version='master',
-            destroy_stack=False
+            destroy_stack=False,
+            debug=False
     ):
         """
         Runs an ansible playbook
@@ -19,6 +20,7 @@ class AnsibleUtilities(object):
         :param playbooks_version:
         :param playbook_name:
         :param playbook_path:
+        :param debug: verbosity of playbook output
         :return:
         """
         # add extra vars to this string
@@ -36,7 +38,7 @@ class AnsibleUtilities(object):
             local('ansible-playbook -i hosts site.yml -e "' + extra_vars + '"')
             # run provisioning playbook
             playbook_cmd = 'ansible-playbook -i hosts '
-            cmd_suffix = ' -e "{}" -v'.format(extra_vars)
+            cmd_suffix = ' -e "{}" -{}'.format(extra_vars, 'vvvv' if debug else 'v')
             provision_cmd = 'provision.yml '
             if playbook_name is not None:
                 provision_cmd = '{}/{}.yml '.format(playbook_path, playbook_name)
