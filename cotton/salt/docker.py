@@ -23,24 +23,16 @@ def run_docker_compose_command(
     if target_dir is None:
         target_dir = grain_target
 
-    print "salt --subset=1 -C 'G@opg_role:{} and G@opg_stackname:{}' cmd.run 'cd /etc/docker-compose/{} && docker-compose run {} {} {} {}' -t 60".format(grain_target,
-            target_stack,
-            target_dir,
-            entry_point_args,
-            env_vars,
-            grain_target,
-            docker_compose_args
-        )
-    # sudo(
-    #     "salt --subset=1 "
-    #     "-C 'G@opg_role:{} and G@opg_stackname:{}' "
-    #     "cmd.run 'cd /etc/docker-compose/{} && docker-compose run {} {} {} {}' -t 60"
-    #     .format(grain_target,
-    #             target_stack,
-    #             target_dir,
-    #             entry_point_args,
-    #             env_vars,
-    #             grain_target,
-    #             docker_compose_args
-    #             )
-    # )
+    sudo(
+        "salt --subset=1 "
+        "-C 'G@opg_role:{} and G@opg_stackname:{}' "
+        "cmd.run 'cd /etc/docker-compose/{} && docker-compose run {} {} {} {}' -t 60"
+        .format(grain_target,
+                target_stack,
+                target_dir,
+                entry_point_args,
+                env_vars,
+                grain_target,
+                docker_compose_args
+                )
+    )
