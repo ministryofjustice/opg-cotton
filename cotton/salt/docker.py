@@ -1,8 +1,6 @@
 from fabric.api import sudo
-from cotton.api import vm_task
 
 
-@vm_task
 def run_docker_compose_command(
         grain_target='test',
         target_stack='aws-develop',

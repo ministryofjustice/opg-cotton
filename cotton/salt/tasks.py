@@ -10,6 +10,27 @@ from cotton.fabextras import smart_rsync_project, is_not_empty
 from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 from yaml import safe_load, safe_dump
 from cStringIO import StringIO
+from docker import run_docker_compose_command
+
+
+@vm_task
+def docker_compose_adhoc(
+        grain_target='test',
+        target_stack='aws-develop',
+        docker_compose_args='',
+        env_vars='',
+        entry_point_args='',
+        target_dir=None
+        ):
+    run_docker_compose_command(
+        grain_target=grain_target,
+        target_stack=target_stack,
+        docker_compose_args=docker_compose_args,
+        env_vars=env_vars,
+        entry_point_args=entry_point_args,
+        target_dir=target_dir
+    )
+
 
 @vm_task
 def salt(
