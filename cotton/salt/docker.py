@@ -1,6 +1,8 @@
 from fabric.api import sudo
+from cotton.api import vm_task
 
 
+@vm_task
 def run_docker_compose_command(
         grain_target='test',
         target_stack='aws-develop',
@@ -8,7 +10,16 @@ def run_docker_compose_command(
         env_vars='',
         entry_point_args='',
         target_dir=None):
-
+    """
+    Runs an ad-hoc docker composer command on a targeted container
+    :param grain_target: the target node in the infra
+    :param target_stack: the stackname
+    :param docker_compose_args:
+    :param env_vars:
+    :param entry_point_args:
+    :param target_dir: the subdir in the docker-compose path
+    :return:
+    """
     if target_dir is None:
         target_dir = grain_target
 
