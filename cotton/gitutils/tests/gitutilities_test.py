@@ -79,3 +79,25 @@ class TestGitUtilities(unittest.TestCase):
             self.gutil.change_set = change_set
         finally:
             sys.stdout = stdout
+
+    def test_non_existent_files_for_staging_do_not_commit(self):
+        stdout = sys.stdout
+
+        try:
+            new_stdout = StringIO()
+            sys.stdout = new_stdout
+            result = self.gutil._git_status()
+            self.assertIn('nothing to commit, working directory clean', result)
+
+            change_set = self.gutil.change_set
+            self.gutil.change_set = []
+            self.gutil.change_set.append(self.random_filename())
+            self.gutil.change_set.append(self.random_filename())
+
+            result = self.gutil.commit_change_set()
+            self.assertEquals(self.gutil.NO_CHANGES_TO_COMMIT, result)
+
+            self.assertIn('nothing to commit, working directory clean', self.gutil._git_status())
+            self.gutil.change_set = change_set
+        finally:
+            sys.stdout = stdout
