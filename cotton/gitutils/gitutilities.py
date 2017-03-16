@@ -7,7 +7,7 @@ from git.exc import GitCommandError
 
 class GitUtilities(object):
     """Simple way to commit and rebase our change sets from a jenkins job"""
-
+    NO_CHANGES_TO_COMMIT = "No changes to commit"
     change_set = []
     message = ''
     repository = None
@@ -50,7 +50,8 @@ class GitUtilities(object):
                     exit(e.status)
 
         else:
-            print(yellow('No changes to commit'))
+            print(yellow(self.NO_CHANGES_TO_COMMIT))
+            return self.NO_CHANGES_TO_COMMIT
 
     def _git_commit(self, changes=[], message=''):
         index = self.repository.index
