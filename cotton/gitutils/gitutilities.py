@@ -31,17 +31,19 @@ class GitUtilities(object):
 
     def commit_change_set(self):
 
-        files_exist = False
-        for change in self.change_set:
-            files_exist |= change in self._git_status()
+        files_exist = []
 
-        if files_exist:
+        for change in self.change_set:
+            if change in self._git_status():
+                files_exist.append(change)
+
+        if len(files_exist):
             try:
                 self._stash_changes()
                 self._checkout_branch()
                 self._pull_branch()
                 self._pop_changes()
-                self._git_commit(self.change_set, self.message)
+                self._git_commit(files_exist, self.message)
             except GitCommandError as e:
                 if e.stderr != 'No stash found.':
                     print(red("Git returned: {}".format(e.stderr)))
