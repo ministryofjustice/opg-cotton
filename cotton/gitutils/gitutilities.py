@@ -45,7 +45,7 @@ class GitUtilities(object):
                 self._pop_changes()
                 self._git_commit(files_exist, self.message)
             except GitCommandError as e:
-                if e.stderr != 'No stash found.':
+                if not e.stderr.contains('No stash found.'):
                     print(red("Git returned: {}".format(e.stderr)))
                     exit(e.status)
 
