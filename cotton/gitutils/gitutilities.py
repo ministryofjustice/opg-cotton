@@ -3,7 +3,8 @@ from git import Repo
 from cotton.colors import yellow, red
 from git import Actor
 from git.exc import GitCommandError
-
+import sys
+from StringIO import StringIO
 
 class GitUtilities(object):
     """Simple way to commit and rebase our change sets from a jenkins job"""
@@ -13,6 +14,7 @@ class GitUtilities(object):
     repository = None
     author = None
     target_branch = ''
+    stashed_changes = False
 
     def __init__(self,
                  changes=[],
@@ -45,7 +47,7 @@ class GitUtilities(object):
                 self._pop_changes()
                 self._git_commit(files_exist, self.message)
             except GitCommandError as e:
-                if e.stderr != 'No stash found.':
+                if not e.stderr.contains('No stash found.'):
                     print(red("Git returned: {}".format(e.stderr)))
                     exit(e.status)
 
@@ -67,12 +69,18 @@ class GitUtilities(object):
         return self.repository.git.status()
 
     def _stash_changes(self):
-        print(yellow("Stashing changes"))
-        self.repository.git.stash('save')
+        self.stashed_changes = False
+        result = self._git_status()
+
+        if 'nothing to commit, working directory clean' not in result:
+            print(yellow("Stashing changes"))
+            self.repository.git.stash()
+            self.stashed_changes = True
 
     def _pop_changes(self):
-        print(yellow("Popping changes"))
-        self.repository.git.stash('pop')
+        if self.stashed_changes:
+            print(yellow("Popping changes"))
+            self.repository.git.stash('pop')
 
     def _checkout_branch(self):
         print(yellow("Checking out {}".format(self.target_branch)))
