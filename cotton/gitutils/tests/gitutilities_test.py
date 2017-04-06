@@ -7,6 +7,7 @@ from git import Repo
 import sys
 from StringIO import StringIO
 
+
 class TestGitUtilities(unittest.TestCase):
 
     gutil = GitUtilities(root_path='./')
@@ -35,9 +36,11 @@ class TestGitUtilities(unittest.TestCase):
             local_file.close()
             result = self.gutil._git_status()
             self.assertNotIn('nothing to commit, working directory clean', result)
+            self.assertFalse(self.gutil.stashed_changes)
 
             self.gutil._stash_changes()
             result = self.gutil._git_status()
+            self.assertTrue(self.gutil.stashed_changes)
             self.assertIn('nothing to commit, working directory clean', result)
 
             self.gutil._pop_changes()
@@ -101,3 +104,12 @@ class TestGitUtilities(unittest.TestCase):
             self.gutil.change_set = change_set
         finally:
             sys.stdout = stdout
+
+    def test_no_stash_not_fatal(self):
+        result = self.gutil._git_status()
+        self.assertIn('nothing to commit, working directory clean', result)
+
+        self.gutil._stash_changes()
+        self.assertFalse(self.gutil.stashed_changes)
+        self.gutil._pop_changes()
+        self.assertFalse(self.gutil.stashed_changes)
