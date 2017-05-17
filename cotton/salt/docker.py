@@ -13,7 +13,7 @@ def run_docker_compose_command(
         target_dir = grain_target
 
     sudo(
-        "salt --subset=1 "
+        "salt --subset=1 --no-color "
         "-C 'G@opg_role:{} and G@opg_stackname:{}' "
         "cmd.run 'cd /etc/docker-compose/{} && docker-compose run {} {} {} {}' -t 60"
         .format(grain_target,
