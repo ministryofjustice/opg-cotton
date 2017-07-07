@@ -220,7 +220,7 @@ def __update_master_config(keys, target):
     # master_config = safe_load(master_data.getvalue())
     current_pillar_roots = master_config['pillar_roots'] if 'pillar_roots' in master_config else []
     new_pillar_roots = keys
-    if target not in new_pillar_roots:
+    if target is not None and target not in new_pillar_roots:
         print "[WARN] Invalid target environment: {} \n Not updating salt configuration".format(target)
         return True
 
