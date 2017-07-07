@@ -244,8 +244,12 @@ def __update_master_config(keys, target):
         except Exception as err:
             print str(err)
     elif refresh:
-        print 'salt needs to have the pillar cache rebuilt'
-        reload_pillar(target)
+        print 'Refreshing pillar cache'
+        if target is not None:
+            print 'Target stack: {}'.format(target)
+            reload_pillar(selector='opg_stackname:{}'.format(target), prefix='-G')
+        else:
+            reload_pillar()
 
 
 @vm_task
