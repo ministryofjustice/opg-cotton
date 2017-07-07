@@ -1,3 +1,6 @@
+"""
+salt related tasks
+"""
 import os
 import time
 import tempfile
@@ -6,7 +9,7 @@ import re
 from fabric.api import sudo, local, task, env, put
 from cotton.colors import green, yellow
 from cotton.api import vm_task
-from cotton.fabextras import smart_rsync_project, is_not_empty
+from cotton.fabextras import smart_rsync_project
 from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 from yaml import safe_load, safe_dump
 from cStringIO import StringIO
@@ -26,8 +29,8 @@ def salt(
     - checks for output of state.highstate / state.sls and aborts on failure
     param selector: i.e.: '*', -G 'roles:foo'
     param args: i.e. state.highstate
-    param parse_highstate: If True then salt output is yaml and parsed for Successes/Changes/Failures
-                           Works for both state.highstate and state.sls
+    param parse_highstate: If True then salt output is yaml and parsed for
+        Successes/Changes/Failures. Works for both state.highstate and state.sls
     param timeout: Passed to salt as a timeout value (-t) in seconds
     """
     smart_salt(
@@ -54,17 +57,16 @@ def highstate_complete():
     Poll jobs active waiting for it to become empty after an unattended_highstate was started
     """
     timeout = 15
-    from cStringIO import StringIO
     result = StringIO()
     salt_run(method='jobs.active', stdout=result)
 
     while len(result.getvalue().strip()):
         result.truncate(0)
-        print(yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout)))
+        print yellow("Highstate is still running.\nPolling again in {} seconds.\n".format(timeout))
         time.sleep(timeout)
         salt_run(method='jobs.active', stdout=result)
 
-    print(green("Highstate complete.\n"))
+    print green("Highstate complete.\n")
 
     result.close()
 
@@ -78,12 +80,12 @@ def salt_event(args):
 
 
 @vm_task
-def rsync():
+def rsync(target=None):
     """
     Invokes salt_rsync overriding the formula-requirements file path if specified
     """
     __rsync_salt()
-    __rsync_pillars()
+    __rsync_pillars(target)
     __rsync_salt_formulas()
 
 
@@ -96,7 +98,7 @@ def __rsync_salt():
     smart_rsync_project('/srv/salt', 'salt/', for_user='root', extra_opts='-L', delete=True)
 
 
-def __rsync_pillars():
+def __rsync_pillars(target):
     """
     rsync the contents of the pillar directories
     """
@@ -132,7 +134,8 @@ def __rsync_pillars():
             dirs = os.listdir(pillar)
 
             if len(dirs):
-                # If we have subdirectories, lets iterate them and add them independantly if they are a directory
+                # If we have subdirectories, lets iterate them
+                # and add them independently if they are a directory
                 for root_dir in dirs:
                     if os.path.isdir("{}/{}".format(pillar, root_dir)):
                         paths.append("{}/{}".format(pillar_path, root_dir))
@@ -152,19 +155,28 @@ def __rsync_pillars():
             )
 
         # Only run this if we have roots set up
-        common_pillars = [ path for path in paths if path != '/srv/pillar']
+        common_pillars = [path for path in paths if path != '/srv/pillar']
         keys['base'] = common_pillars
-        for dir in env.pillar_dirs:
-            if 'pillar' in dir:
-                stack_name = os.path.basename(dir)
-                keys[stack_name] = ["{}/{}/{}".format(base_root_path,'pillar',stack_name) ] + common_pillars
+        for pillar_dir in env.pillar_dirs:
+            if 'pillar' in pillar_dir:
+                stack_name = os.path.basename(pillar_dir)
+                keys[stack_name] = ["{}/{}/{}".format(
+                    base_root_path,
+                    'pillar',
+                    stack_name
+                )] + common_pillars
     __reset_pillar_owner(base_root_path=pillar_path)
-    __update_master_config(keys)
+    __update_master_config(keys, target)
 
 
-def __reset_pillar_owner(pillar_owner='root', base_pillar_path='/srv/pillar', base_root_path='/srv/pillar_roots'):
+def __reset_pillar_owner(
+        pillar_owner='root',
+        base_pillar_path='/srv/pillar',
+        base_root_path='/srv/pillar_roots'
+):
     """
-    Resets the owner on the pillars after a rsync, we need to defer this to the end when synching multiple directories
+    Resets the owner on the pillars after a rsync, we need to defer
+    this to the end when synching multiple directories
     :param pillar_owner: string, owner
     :param base_pillar_path: string path to pillar root
     :param base_root_path:  string path to pillar_roots root
@@ -179,10 +191,16 @@ def __rsync_salt_formulas():
     Upload our salt formulas
     """
     sudo("mkdir -p /srv/salt-formulas")
-    smart_rsync_project('/srv/salt-formulas', 'vendor/_root/', for_user='root', extra_opts='-L', delete=True)
+    smart_rsync_project(
+        '/srv/salt-formulas',
+        'vendor/_root/',
+        for_user='root',
+        extra_opts='-L',
+        delete=True
+    )
 
 @vm_task
-def __update_master_config(keys):
+def __update_master_config(keys, target):
     """
     Updates the master config if needed, adds pillar_roots to the config and restarts the server
     :param keys: List of keys containing pillar_roots
@@ -192,7 +210,7 @@ def __update_master_config(keys):
 
     # read master config into dict
     master_data = StringIO()
-    sudo ('cat /etc/salt/master|grep -v ^# | grep -v ^$', stdout=master_data)
+    sudo('cat /etc/salt/master|grep -v ^# | grep -v ^$', stdout=master_data)
     salt_output = master_data.getvalue().strip()
     yaml_string = ''
     pattern = re.compile(r'(\W+.*out:)')
@@ -203,34 +221,31 @@ def __update_master_config(keys):
     current_pillar_roots = master_config['pillar_roots'] if 'pillar_roots' in master_config else []
     new_pillar_roots = keys
 
-    if current_pillar_roots != new_pillar_roots:
+    if target is not None and target not in current_pillar_roots:
         master_config['pillar_roots'] = new_pillar_roots
-        # refresh = True
         restart = True
-    # else:
-    #     refresh = True
+    else:
+        refresh = True
 
     if restart:
         try:
-            d = tempfile.mkdtemp()
-            f = open(d + '/master.auto', 'w')
-            f.write(safe_dump(master_config, default_flow_style=False))
-            f.close()
-            put(f.name, 'master.auto')
-            local('rm -rf ' + d)
+            tmp_dir = tempfile.mkdtemp()
+            master_config_file = '{}/master.auto'.format(tmp_dir)
+            master_file = open(master_config_file, 'w')
+            master_file.write(safe_dump(master_config, default_flow_style=False))
+            master_file.close()
+            put(master_file.name, 'master.auto')
+            local('rm -rf {}'.format(tmp_dir))
             sudo('mv  -v master.auto /etc/salt/master', stdout=master_data)
-            print("{}".format(master_data.getvalue()))
+            print "{}".format(master_data.getvalue())
 
             restart_service('salt-master')
             time.sleep(30)
-        except Exception as e:
-            print (str(e))  # TODO handle this error
-            pass
+        except Exception as err:
+            print str(err)
     elif refresh:
-        print('salt needs to have the pillar cache rebuilt')
-        reload_pillar()
-    # TODO run a salt reload cache here for changed pillar data
-    #
+        print 'salt needs to have the pillar cache rebuilt'
+        reload_pillar(target)
 
 
 @vm_task
@@ -261,7 +276,12 @@ def reload_pillar(selector="'*'", prefix='', salt_environment=None):
     :param salt_environment: string for our target environment, default None
     :return:
     """
-    salt(selector=selector, args='saltutil.refresh_pillar', prefix=prefix, salt_environment=salt_environment)
+    salt(
+        selector=selector,
+        args='saltutil.refresh_pillar',
+        prefix=prefix,
+        salt_environment=salt_environment
+    )
 
 
 def clear_cache(selector="'*'", prefix='', salt_environment=None):
@@ -272,7 +292,12 @@ def clear_cache(selector="'*'", prefix='', salt_environment=None):
     :param salt_environment: string for our target environment, default None
     :return:
     """
-    salt(selector=selector, args='saltutil.clear_cache', prefix=prefix, salt_environment=salt_environment)
+    salt(
+        selector=selector,
+        args='saltutil.clear_cache',
+        prefix=prefix,
+        salt_environment=salt_environment
+    )
 
 
 @vm_task
@@ -284,10 +309,18 @@ def refresh_pillars(selector="'*'", prefix='', salt_environment=None):
     :param salt_environment: string representing our target environment
     :return:
     """
-    print(yellow("Clearing pillar cache"))
-    clear_cache(selector=selector, prefix=prefix, salt_environment=salt_environment)
-    print(yellow("Refreshing pillar data"))
-    reload_pillar(selector=selector, prefix=prefix, salt_environment=salt_environment)
+    print yellow("Clearing pillar cache")
+    clear_cache(
+        selector=selector,
+        prefix=prefix,
+        salt_environment=salt_environment
+    )
+    print yellow("Refreshing pillar data")
+    reload_pillar(
+        selector=selector,
+        prefix=prefix,
+        salt_environment=salt_environment
+    )
 
 
 @vm_task
@@ -311,7 +344,8 @@ def highstate(
 ):
     """
     Highstate the target node(s)
-    :param selector: defaults to all, can get a wildcard or with the use of the prefix parameter, grain or compound match
+    :param selector: defaults to all, can get a wildcard or with the use of the prefix
+    parameter, grain or compound match
     :param parse_highstate: boolean, default False, parse the output and summarise our errors
     :param timeout: timeout in seconds
     :param prefix: string, default empty, can be -C or -G for compound or grain matches
@@ -375,7 +409,8 @@ def shaker_freeze():
     local(
         'for d in vendor/formula-repos/*; '
         'do echo -n "$d "; '
-        'git --git-dir=$d/.git describe --tags 2>/dev/null || git --git-dir=$d/.git rev-parse --short HEAD; done',
+        'git --git-dir=$d/.git describe --tags 2>/dev/null '
+        ' || git --git-dir=$d/.git rev-parse --short HEAD; done',
         shell='/bin/bash'
     )
 
@@ -399,6 +434,9 @@ def shaker_check():
 
 @vm_task
 def healthcheck():
+    """
+    run commands to show state of stack
+    """
     salt(args='test.ping')
     salt(args='cmd.run "docker ps"')
     salt(args='cmd.run "df -hl && echo && btrfs filesystem show"')
