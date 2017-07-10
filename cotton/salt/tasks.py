@@ -224,7 +224,7 @@ def __update_master_config(keys, target):
         print "[WARN] Invalid target environment: {} \n Not updating salt configuration".format(target)
         return True
 
-    if target is not None and target not in current_pillar_roots:
+    if target and target not in current_pillar_roots:
         master_config['pillar_roots'] = new_pillar_roots
         restart = True
     else:
@@ -234,9 +234,8 @@ def __update_master_config(keys, target):
         try:
             tmp_dir = tempfile.mkdtemp()
             master_config_file = '{}/master.auto'.format(tmp_dir)
-            master_file = open(master_config_file, 'w')
-            master_file.write(safe_dump(master_config, default_flow_style=False))
-            master_file.close()
+            with open(master_config_file, 'w') as master_file:
+                master_file.write(safe_dump(master_config, default_flow_style=False))
             put(master_file.name, 'master.auto')
             local('rm -rf {}'.format(tmp_dir))
             sudo('mv  -v master.auto /etc/salt/master', stdout=master_data)
@@ -248,7 +247,7 @@ def __update_master_config(keys, target):
             print str(err)
     elif refresh:
         print 'Refreshing pillar cache'
-        if target is not None:
+        if target:
             print 'Target stack: {}'.format(target)
             reload_pillar(selector='opg_stackname:{}'.format(target), prefix='-G')
         else:
