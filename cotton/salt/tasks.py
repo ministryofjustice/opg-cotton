@@ -105,7 +105,7 @@ def __rsync_pillars(target):
     # Sync our project pillar to /srv/pillar
     pillar_location = get_pillar_location(parse_top_sls=False, target=target)
 
-    base_pillar_path = '/srv/pillar/'
+    base_pillar_path = '/srv/pillar'
     if target:
         base_pillar_path = '{}/{}'.format(base_pillar_path, target)
 
