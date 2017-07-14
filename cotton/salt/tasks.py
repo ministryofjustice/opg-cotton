@@ -108,6 +108,7 @@ def __rsync_pillars(target):
     base_pillar_path = '/srv/pillar'
     if target:
         base_pillar_path = '{}/{}'.format(base_pillar_path, target)
+        pillar_location = '{}/{}'.format(pillar_location, target)
 
     keys = {}
     paths = [base_pillar_path]
