@@ -103,9 +103,11 @@ def __rsync_pillars(target):
     rsync the contents of the pillar directories
     """
     # Sync our project pillar to /srv/pillar
-    pillar_location = get_pillar_location(parse_top_sls=False)
+    pillar_location = get_pillar_location(parse_top_sls=False, target=target)
 
-    base_pillar_path = '/srv/pillar'
+    base_pillar_path = '/srv/pillar/'
+    if target:
+        base_pillar_path = '{}/{}'.format(base_pillar_path, target)
 
     keys = {}
     paths = [base_pillar_path]
@@ -117,7 +119,9 @@ def __rsync_pillars(target):
         '{}/'.format(pillar_location),
         for_user='root',
         extra_opts='-L',
-        delete=True)
+        delete=True,
+        target=target
+    )
 
     # Now if we have pillar roots, lets sync them
     if 'pillar_roots' in env:

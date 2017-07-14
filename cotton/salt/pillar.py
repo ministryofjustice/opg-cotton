@@ -44,7 +44,12 @@ def _get_projects_location():
         return os.path.abspath(os.path.join(fab_location, '../config/projects/'))
 
 
-def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_top_sls=True):
+def get_rendered_pillar_location(
+        pillar_dir=None,
+        projects_location=None,
+        parse_top_sls=True,
+        target=None
+    ):
     """
     Returns path to rendered pillar.
     Use to render pillars written in jinja locally not to upload unwanted data to network.
@@ -66,7 +71,7 @@ def get_rendered_pillar_location(pillar_dir=None, projects_location=None, parse_
     if projects_location is None:
         projects_location = _get_projects_location()
 
-    pillars = __load_pillar_dirs(pillar_dir, projects_location)
+    pillars = __load_pillar_dirs(pillar_dir, projects_location, target)
     jinja_env = _set_template_env(pillars, projects_location)
 
     dest_location = tempfile.mkdtemp()
@@ -154,7 +159,7 @@ def _set_template_env(pillars, projects_location):
     return jinja_env
 
 
-def __load_pillar_dirs(pillar_dir, projects_location):
+def __load_pillar_dirs(pillar_dir, projects_location, target=None):
     """
     Loads all of the pillar directories into a list
     :param pillar_dir: string
@@ -177,7 +182,12 @@ def __load_pillar_dirs(pillar_dir, projects_location):
         for root in env.pillar_dirs:
             pillars.append(root)
 
-    return list(set(pillars))
+    pillars = list(set(pillars))
+
+    if target:
+        return list(filter(lambda x: target in x, pillars))
+
+    return pillars
 
 
 def __render_templates(files_to_render, dest_location, jinja_env):
@@ -220,3 +230,4 @@ def __render_templates(files_to_render, dest_location, jinja_env):
     return len(errors) == 0
 
 get_pillar_location = get_rendered_pillar_location
+get_pillar_dirs = __load_pillar_dirs

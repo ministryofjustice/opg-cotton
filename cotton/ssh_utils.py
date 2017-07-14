@@ -44,7 +44,8 @@ def rsync_project(
     ssh_opts='',
     capture=False,
     upload=True,
-    default_opts='-pthrvz'
+    default_opts='-pthrvz',
+    target=None
 ):
     """
     Synchronize a remote directory with the current project directory via rsync.
