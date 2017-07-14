@@ -108,7 +108,7 @@ def smart_rsync_project(*args, **kwargs):
         with settings(warn_only=True):
             sudo("mkdir -p {}".format(directory))
             sudo("find {} -type d -exec chmod u+rwx {{}} +".format(directory))
-            if kwargs['target']:
+            if 'target' in kwargs and kwargs['target'] is not None:
                 directory = directory.replace(kwargs['target'] + '/', '')
             sudo("chown -R {} {}".format(env.user, directory))
 
