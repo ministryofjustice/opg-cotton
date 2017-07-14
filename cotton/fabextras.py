@@ -100,7 +100,6 @@ def smart_rsync_project(*args, **kwargs):
         do_not_reset_mask = False
 
     directory = args[0]
-
     if env.disable_known_hosts:
         kwargs['ssh_opts'] = kwargs.get('ssh_opts', '') + " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
@@ -109,7 +108,7 @@ def smart_rsync_project(*args, **kwargs):
             sudo("mkdir -p {}".format(directory))
             sudo("find {} -type d -exec chmod u+rwx {{}} +".format(directory))
             if 'target' in kwargs and kwargs['target'] is not None:
-                directory = directory.replace(kwargs['target'] + '/', '')
+                directory = directory.replace(kwargs['target'], '')
             sudo("chown -R {} {}".format(env.user, directory))
 
     rsync_project(*args, **kwargs)
