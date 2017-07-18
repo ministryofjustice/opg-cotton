@@ -123,9 +123,11 @@ def __rsync_pillars(target):
         delete=True,
         target=target
     )
-
+    pillar_path = '/srv/pillar'
+    paths = [pillar_path]
     # Now if we have pillar roots, lets sync them
     if 'pillar_roots' in env:
+        print "found pillar roots in env: {}".format(env.pillar_roots)
         base_root_path = '/srv'
         for pillar in env.pillar_roots:
 
@@ -160,7 +162,7 @@ def __rsync_pillars(target):
             )
 
         # Only run this if we have roots set up
-        common_pillars = [path for path in paths if path != '/srv/pillar']
+        common_pillars = [path for path in paths if '/srv/pillar/' not in path]
         keys['base'] = common_pillars
         for pillar_dir in env.pillar_dirs:
             if 'pillar' in pillar_dir:
