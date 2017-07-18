@@ -162,7 +162,7 @@ def __rsync_pillars(target):
             )
 
         # Only run this if we have roots set up
-        common_pillars = [path for path in paths if '/srv/pillar/' not in path]
+        common_pillars = [path for path in paths if pillar_path not in path]
         keys['base'] = common_pillars
         for pillar_dir in env.pillar_dirs:
             if 'pillar' in pillar_dir:
