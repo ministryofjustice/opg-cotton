@@ -13,6 +13,7 @@ from cotton.fabextras import smart_rsync_project
 from cotton.salt import get_pillar_location, smart_salt, Shaker, salt_call, salt_run
 from yaml import safe_load, safe_dump
 from cStringIO import StringIO
+from retrying import retry
 
 @vm_task
 def salt(
@@ -348,6 +349,7 @@ def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=
 
 
 @vm_task
+@retry(stop_max_attempt_number=3, wait_fixed=30000)
 def highstate(
         selector="'*'",
         parse_highstate=False,

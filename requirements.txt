@@ -5,3 +5,4 @@ boto
 python-dateutil
 GitPython
 pptable
+retrying
