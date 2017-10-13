@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='opg-cotton',
-    version='1.0.10',
+    version='1.0.11',
     url='https://github.com/ministryofjustice/opg-cotton',
     license='MIT',
     author='',
@@ -22,6 +22,7 @@ setup(
         'pyyaml',
         'GitPython',
         'pptable',
+        'retrying',
     ],
     classifiers=[
     ],
