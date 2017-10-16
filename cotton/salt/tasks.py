@@ -338,7 +338,7 @@ def refresh_pillars(selector="'*'", prefix='', salt_environment=None):
 
 
 @vm_task
-def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=60):
+def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=180):
     """
     shaker, rsync, highstate
     """
