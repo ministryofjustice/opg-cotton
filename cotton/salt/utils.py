@@ -20,17 +20,20 @@ def build_salt_dirs():
             _dirs = yaml.safe_load(f)
         pillar_dirs = _dirs['pillar'][env.provider_zone] + _dirs['pillar']['common']
         pillar_roots = _dirs['pillar_roots'][env.provider_zone] + _dirs['pillar_roots']['common']
+
         for pillar_dir_name in pillar_dirs:
             if os.path.exists(pillar_dir_name):
                 dir_list.append(pillar_dir_name)
             else:
                 not_found.append(pillar_dir_name)
 
-        for pillar_rootdir_name in pillar_roots:
-            if os.path.exists(pillar_rootdir_name):
-                root_list.append(pillar_rootdir_name)
-            else:
-                not_found.append(pillar_rootdir_name)
+        for pillar_root_dir in pillar_roots:
+            for root, dirs, files in os.walk(pillar_root_dir):
+                rel_path = os.path.relpath(root, dirs)
+                if os.path.exists(rel_path):
+                    root_list.append(rel_path)
+                else:
+                    not_found.append(rel_path)
 
         return {'pillar_dir': dir_list, 'pillar_root': root_list, 'missing': not_found}
     except (OSError,  IOError):
