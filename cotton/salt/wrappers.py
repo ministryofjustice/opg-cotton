@@ -45,7 +45,7 @@ def smart_salt(
         selector,
         args,
         parse_highstate=False,
-        timeout=60,
+        timeout=180,
         prefix='',
         salt_environment=None
 ):
