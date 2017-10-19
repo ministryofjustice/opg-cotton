@@ -16,11 +16,12 @@ from cStringIO import StringIO
 from retrying import retry
 
 @vm_task
+@retry(stop_max_attempt_number=3, wait_fixed=60000)
 def salt(
         selector="'*'",
         args='state.highstate',
         parse_highstate=False,
-        timeout=60,
+        timeout=180,
         prefix='',
         salt_environment=None
 ):
@@ -282,6 +283,7 @@ def restart_service(service_name):
     sudo(cmd)
 
 
+@retry(stop_max_attempt_number=3, wait_fixed=60000)
 def reload_pillar(selector="'*'", prefix='', salt_environment=None):
     """
     Reload our targets pillar data
@@ -349,11 +351,11 @@ def update(selector="'*'", skip_highstate=False, parse_highstate=False, timeout=
 
 
 @vm_task
-@retry(stop_max_attempt_number=3, wait_fixed=30000)
+@retry(stop_max_attempt_number=3, wait_fixed=60000)
 def highstate(
         selector="'*'",
         parse_highstate=False,
-        timeout=60,
+        timeout=180,
         prefix='',
         salt_environment=None
 ):
