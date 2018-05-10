@@ -1,4 +1,4 @@
-Fabric
+Fabric==1.14
 Jinja2
 PyYAML
 boto
