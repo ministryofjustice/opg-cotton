@@ -469,3 +469,15 @@ def workon_short(workon_short):
     )
     workon(env.vm_name)
 
+@vm_task
+def environment_highstate(target_environment):
+    """
+    Highstate the target environment, with minimum verbosity
+    :param target_environment: string, name of the target environemtn, i.e. feature1, demo, production, etc
+    :return:
+    """
+    smart_salt(
+        selector='opg_stackname:{}'.format(target_environment),
+        args='state.highstate --state-verbose=False --state-output=changes',
+        prefix='-G'
+    )
