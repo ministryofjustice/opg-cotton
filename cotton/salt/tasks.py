@@ -478,6 +478,6 @@ def environment_highstate(target_environment):
     """
     smart_salt(
         selector='opg_stackname:{}'.format(target_environment),
-        args='state.highstate --state-verbose=False --state-output=changes',
+        args='state.highstate --state-verbose=False --state-output=changes --summary',
         prefix='-G'
     )
