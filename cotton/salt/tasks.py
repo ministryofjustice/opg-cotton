@@ -473,7 +473,7 @@ def workon_short(workon_short):
 def environment_highstate(target_environment):
     """
     Highstate the target environment, with minimum verbosity
-    :param target_environment: string, name of the target environemtn, i.e. feature1, demo, production, etc
+    :param target_environment: string, name of the target environment, i.e. feature1, demo, production, etc
     :return:
     """
     smart_salt(
